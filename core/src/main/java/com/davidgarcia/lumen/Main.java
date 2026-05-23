@@ -2,10 +2,11 @@ package com.davidgarcia.lumen;
 
 import com.badlogic.gdx.Game;
 
-/** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
+/** Punto de entrada del juego Lumen. */
 public class Main extends Game {
+
     @Override
     public void create() {
-        setScreen(new FirstScreen());
+        // TODO: setScreen(new PantallaMenu(this));
     }
 }
