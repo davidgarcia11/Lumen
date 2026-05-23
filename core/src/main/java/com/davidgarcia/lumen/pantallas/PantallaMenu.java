@@ -47,7 +47,7 @@ public class PantallaMenu extends ScreenAdapter {
 
         botonNuevaPartida.addListener(new ChangeListener() {
             @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
-                Gdx.app.log("PantallaMenu", "Nueva partida (pendiente de implementar)");
+                juego.setScreen(new PantallaJuego(juego));
             }
         });
         botonRecords.addListener(new ChangeListener() {
