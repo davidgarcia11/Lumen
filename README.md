@@ -1,33 +1,72 @@
-# Lumen
+# Lumen — Capítulo I: La Ascensión
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+> Videojuego *top-down* 2D desarrollado con libGDX.
+> Actividad de Aprendizaje · 2ª Evaluación · Curso 2025-2026
+> Programación Multimedia y Dispositivos Móviles · SEAS / Fundación San Valero
 
-This project was generated with a template including simple application launchers and a main class extending `Game` that sets the first screen.
+---
 
-## Platforms
+## Sobre el juego
 
-- `core`: Main module with the application logic shared by all platforms.
-- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
+**Lumen** es un pequeño espíritu de luz que despierta en las profundidades olvidadas de un templo perdido bajo la jungla. Su misión: ascender hasta la superficie antes de extinguirse.
 
-## Gradle
+Su luz es su identidad, su arma y su vulnerabilidad. Ilumina el camino, debilita a las criaturas de sombra que custodian el templo y le permite resolver los rompecabezas que separan las salas, pero se consume con el tiempo y con cada daño recibido.
 
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
+A través de doce salas distribuidas en dos niveles, el jugador decide cuándo enfrentarse a la oscuridad y cuándo esquivarla, recolectando esencias para desbloquear nuevas habilidades en los santuarios olvidados del templo.
 
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
+## Características
 
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
+- **Movimiento 8 direcciones** con vector normalizado.
+- **Sistema de luz** como recurso unificado: vida, iluminación y combustible.
+- **Combate opcional**: el jugador puede esquivar a los enemigos en lugar de enfrentarlos.
+- **3 personajes seleccionables** con estadísticas y mecánicas únicas (Luminis, Ignis, Aethen).
+- **Sistema de habilidades por santuarios**: ráfaga de luz, dash con invulnerabilidad y aura permanente.
+- **IA con máquinas de estados** para los 4 tipos de criaturas de sombra.
+- **Top 10 de Récords de Campeones** persistente.
+- **Guardar y cargar partida**.
+- **Menú de pausa in-game**.
+
+## Controles
+
+| Tecla | Acción |
+|---|---|
+| W / A / S / D | Movimiento en 8 direcciones |
+| Espacio | Ráfaga de luz (una vez desbloqueada) |
+| Shift izquierdo | Dash con invulnerabilidad (una vez desbloqueado) |
+| E | Interactuar (palancas, santuarios, inscripciones, puertas) |
+| Esc | Abrir/cerrar menú de pausa |
+
+## Tecnologías
+
+- **libGDX 1.14.1** — motor de videojuegos 2D multiplataforma.
+- **Java 17** — lenguaje de desarrollo.
+- **Gradle** — sistema de build (incluido vía wrapper).
+- **Tiled** — editor externo de mapas (`.tmx`).
+- **Pixel art** 16-bit como estilo visual.
+
+## Documentación
+
+El proyecto incluye documentación detallada:
+
+- [`docs/DISENO.md`](docs/DISENO.md) — Documento de diseño completo (concepto, mecánicas, niveles, arquitectura técnica).
+
+## Estado del proyecto
+
+Proyecto en desarrollo. Consulta la pestaña [Releases](https://github.com/davidgarcia11/Lumen/releases) para ver las versiones publicadas.
+
+- 🚧 Fase de diseño completada.
+- 🚧 Implementación en curso.
+
+## Estructura de ramas
+
+- `main` — versiones estables (releases v1.0 y v2.0).
+- `develop` — rama de integración del desarrollo.
+- `feature/*`, `fix/*`, `docs/*` — ramas de trabajo, integradas vía Pull Request.
+
+## Autor
+
+David García — Alumno de Programación Multimedia y Dispositivos Móviles, SEAS / Fundación San Valero.
+
+## Licencia y créditos
+
+Proyecto académico. Los assets gráficos y de audio utilizados son recursos gratuitos de terceros con licencias compatibles (Kenney, OpenGameArt, itch.io u otros). Los créditos completos se publicarán en la wiki del repositorio.
