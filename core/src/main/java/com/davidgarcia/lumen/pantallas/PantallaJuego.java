@@ -67,8 +67,15 @@ public class PantallaJuego extends ScreenAdapter {
             return;
         }
 
+        if (Gdx.input.isKeyPressed(Input.Keys.J)) personaje.recibirDano(60f * delta);
+        if (Gdx.input.isKeyPressed(Input.Keys.K)) personaje.recargarEnergia(60f * delta);
+
         for (Entidad entidad : entidades) {
             entidad.actualizar(delta);
+        }
+
+        if (personaje.estaExtinguido()) {
+            juego.setScreen(new PantallaMenu(juego));
         }
     }
 

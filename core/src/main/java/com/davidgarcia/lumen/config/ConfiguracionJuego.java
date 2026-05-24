@@ -24,6 +24,10 @@ public final class ConfiguracionJuego {
     // ─── Lumen ──────────────────────────────────────────────────────────────
     public static final int LUMEN_TAMANO = 12;
     public static final float LUMEN_VELOCIDAD = 80f;
+    /** Energía máxima al inicio de un nivel o tras cargar partida. */
+    public static final float LUMEN_ENERGIA_MAXIMA = 100f;
+    /** Cuánta energía pierde por segundo solo por estar en el mundo (consumo pasivo). */
+    public static final float LUMEN_CONSUMO_POR_SEGUNDO = 1.5f;
 
     private ConfiguracionJuego() {
         // Clase de constantes; no se instancia.
