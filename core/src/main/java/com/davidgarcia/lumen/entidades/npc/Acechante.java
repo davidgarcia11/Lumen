@@ -8,14 +8,14 @@ import com.badlogic.gdx.math.Vector2;
 public class Acechante extends NPC {
 
     private static final float VIDA = 20f;
-    private static final float DANO = 10f;
+    private static final float DANO = 25f;
     private static final float VELOCIDAD = 25f;
     private static final int TAMANO = 10;
 
     private static final float UMBRAL_DESTINO = 1f;
 
     private static final Color COLOR_CUERPO = new Color(0.10f, 0.10f, 0.15f, 1f);
-    private static final Color COLOR_OJOS = new Color(0.95f, 0.95f, 0.95f, 1f);
+    private static final Color COLOR_OJOS = new Color(0.85f, 0.20f, 0.20f, 1f);
 
     private final Vector2 puntoA;
     private final Vector2 puntoB;
@@ -26,6 +26,7 @@ public class Acechante extends NPC {
         this.puntoA = new Vector2(ax, ay);
         this.puntoB = new Vector2(bx, by);
         this.destinoActual = puntoB;
+        actualizarHitbox();
     }
 
     @Override
@@ -42,6 +43,7 @@ public class Acechante extends NPC {
 
         hacia.nor().scl(VELOCIDAD * delta);
         posicion.add(hacia);
+        actualizarHitbox();
     }
 
     @Override
@@ -63,5 +65,10 @@ public class Acechante extends NPC {
         renderer.rect(posicion.x + ojoOffsetX - ojoTamano / 2f,
             posicion.y + ojoOffsetY,
             ojoTamano, ojoTamano);
+    }
+
+    private void actualizarHitbox() {
+        float mitad = TAMANO / 2f;
+        hitbox.set(posicion.x - mitad, posicion.y - mitad, TAMANO, TAMANO);
     }
 }

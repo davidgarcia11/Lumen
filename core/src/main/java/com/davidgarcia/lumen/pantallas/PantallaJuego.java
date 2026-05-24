@@ -13,6 +13,7 @@ import com.davidgarcia.lumen.config.ConfiguracionJuego;
 import com.davidgarcia.lumen.entidades.Entidad;
 import com.davidgarcia.lumen.entidades.Personaje;
 import com.davidgarcia.lumen.entidades.npc.Acechante;
+import com.davidgarcia.lumen.entidades.npc.NPC;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,15 +68,28 @@ public class PantallaJuego extends ScreenAdapter {
             return;
         }
 
-        if (Gdx.input.isKeyPressed(Input.Keys.J)) personaje.recibirDano(60f * delta);
-        if (Gdx.input.isKeyPressed(Input.Keys.K)) personaje.recargarEnergia(60f * delta);
-
         for (Entidad entidad : entidades) {
             entidad.actualizar(delta);
         }
 
+        detectarColisionesPersonajeNPC();
+
         if (personaje.estaExtinguido()) {
             juego.setScreen(new PantallaMenu(juego));
+        }
+    }
+
+    private void detectarColisionesPersonajeNPC() {
+        if (personaje.esInvulnerable()) return;
+
+        for (Entidad entidad : entidades) {
+            if (!(entidad instanceof NPC)) continue;
+            NPC npc = (NPC) entidad;
+            if (!npc.estaVivo()) continue;
+            if (personaje.getHitbox().overlaps(npc.getHitbox())) {
+                personaje.recibirDano(npc.getDanoAlJugador());
+                return;
+            }
         }
     }
 
