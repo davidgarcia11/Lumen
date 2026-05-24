@@ -2,8 +2,6 @@ package com.davidgarcia.lumen.pantallas;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -14,6 +12,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.davidgarcia.lumen.Main;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
+import com.davidgarcia.lumen.ui.SkinFactory;
 
 /** Pantalla del menú principal. */
 public class PantallaMenu extends ScreenAdapter {
@@ -30,8 +29,7 @@ public class PantallaMenu extends ScreenAdapter {
     public void show() {
         stage = new Stage(new ExtendViewport(ConfiguracionJuego.ANCHO_VENTANA, ConfiguracionJuego.ALTO_VENTANA));
         Gdx.input.setInputProcessor(stage);
-
-        skin = crearSkinBasica();
+        skin = SkinFactory.crearSkinBasica();
 
         Table tabla = new Table();
         tabla.setFillParent(true);
@@ -52,17 +50,17 @@ public class PantallaMenu extends ScreenAdapter {
         });
         botonRecords.addListener(new ChangeListener() {
             @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
-                Gdx.app.log("PantallaMenu", "Récords (pendiente de implementar)");
+                juego.setScreen(new PantallaRecords(juego));
             }
         });
         botonInstrucciones.addListener(new ChangeListener() {
             @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
-                Gdx.app.log("PantallaMenu", "Instrucciones (pendiente de implementar)");
+                juego.setScreen(new PantallaInstrucciones(juego));
             }
         });
         botonConfiguracion.addListener(new ChangeListener() {
             @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
-                Gdx.app.log("PantallaMenu", "Configuración (pendiente de implementar)");
+                juego.setScreen(new PantallaConfiguracion(juego));
             }
         });
         botonSalir.addListener(new ChangeListener() {
@@ -101,29 +99,5 @@ public class PantallaMenu extends ScreenAdapter {
     public void dispose() {
         if (stage != null) stage.dispose();
         if (skin != null) skin.dispose();
-    }
-
-    /** Construye una skin minimalista con la fuente por defecto de libGDX. */
-    private Skin crearSkinBasica() {
-        Skin s = new Skin();
-        BitmapFont fuente = new BitmapFont();
-        BitmapFont fuenteTitulo = new BitmapFont();
-        fuenteTitulo.getData().setScale(3f);
-        s.add("default-font", fuente);
-        s.add("titulo-font", fuenteTitulo);
-
-        Label.LabelStyle estiloLabel = new Label.LabelStyle(fuente, com.badlogic.gdx.graphics.Color.WHITE);
-        s.add("default", estiloLabel);
-
-        Label.LabelStyle estiloTitulo = new Label.LabelStyle(fuenteTitulo, ConfiguracionJuego.COLOR_LUMEN);
-        s.add("titulo", estiloTitulo);
-
-        TextButton.TextButtonStyle estiloBoton = new TextButton.TextButtonStyle();
-        estiloBoton.font = fuente;
-        estiloBoton.fontColor = com.badlogic.gdx.graphics.Color.LIGHT_GRAY;
-        estiloBoton.overFontColor = ConfiguracionJuego.COLOR_LUMEN;
-        s.add("default", estiloBoton);
-
-        return s;
     }
 }
