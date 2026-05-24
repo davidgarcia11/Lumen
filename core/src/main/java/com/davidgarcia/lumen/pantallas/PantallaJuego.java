@@ -10,7 +10,12 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.davidgarcia.lumen.Main;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
+import com.davidgarcia.lumen.entidades.Entidad;
 import com.davidgarcia.lumen.entidades.Personaje;
+import com.davidgarcia.lumen.entidades.npc.Acechante;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /** Pantalla principal de juego: orquesta el bucle de simulación de las entidades. */
 public class PantallaJuego extends ScreenAdapter {
@@ -22,6 +27,7 @@ public class PantallaJuego extends ScreenAdapter {
     private ShapeRenderer shapeRenderer;
 
     private Personaje personaje;
+    private final List<Entidad> entidades = new ArrayList<>();
 
     public PantallaJuego(Main juego) {
         this.juego = juego;
@@ -39,6 +45,14 @@ public class PantallaJuego extends ScreenAdapter {
             ConfiguracionJuego.ANCHO_MUNDO / 2f,
             ConfiguracionJuego.ALTO_MUNDO / 2f
         );
+        entidades.add(personaje);
+
+        entidades.add(new Acechante(
+            ConfiguracionJuego.ANCHO_MUNDO * 0.20f,
+            ConfiguracionJuego.ALTO_MUNDO * 0.30f,
+            ConfiguracionJuego.ANCHO_MUNDO * 0.80f,
+            ConfiguracionJuego.ALTO_MUNDO * 0.30f
+        ));
     }
 
     @Override
@@ -53,7 +67,9 @@ public class PantallaJuego extends ScreenAdapter {
             return;
         }
 
-        personaje.actualizar(delta);
+        for (Entidad entidad : entidades) {
+            entidad.actualizar(delta);
+        }
     }
 
     private void dibujar() {
@@ -68,7 +84,9 @@ public class PantallaJuego extends ScreenAdapter {
         shapeRenderer.setProjectionMatrix(camara.combined);
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        personaje.dibujar(shapeRenderer);
+        for (Entidad entidad : entidades) {
+            entidad.dibujar(shapeRenderer);
+        }
         shapeRenderer.end();
     }
 
