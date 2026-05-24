@@ -13,10 +13,12 @@ public final class GestorPreferencias {
     private static final String CLAVE_VOLUMEN_MUSICA = "volumen_musica";
     private static final String CLAVE_VOLUMEN_EFECTOS = "volumen_efectos";
     private static final String CLAVE_DIFICULTAD = "dificultad";
+    private static final String CLAVE_SONIDO_ACTIVADO = "sonido_activado";
 
     private static final int VOLUMEN_MUSICA_POR_DEFECTO = 70;
     private static final int VOLUMEN_EFECTOS_POR_DEFECTO = 80;
     private static final Dificultad DIFICULTAD_POR_DEFECTO = Dificultad.NORMAL;
+    private static final boolean SONIDO_ACTIVADO_POR_DEFECTO = true;
 
     private static Preferences prefs;
 
@@ -56,6 +58,15 @@ public final class GestorPreferencias {
 
     public static void setDificultad(Dificultad dificultad) {
         prefs().putString(CLAVE_DIFICULTAD, dificultad.name());
+        prefs().flush();
+    }
+
+    public static boolean isSonidoActivado() {
+        return prefs().getBoolean(CLAVE_SONIDO_ACTIVADO, SONIDO_ACTIVADO_POR_DEFECTO);
+    }
+
+    public static void setSonidoActivado(boolean activado) {
+        prefs().putBoolean(CLAVE_SONIDO_ACTIVADO, activado);
         prefs().flush();
     }
 
