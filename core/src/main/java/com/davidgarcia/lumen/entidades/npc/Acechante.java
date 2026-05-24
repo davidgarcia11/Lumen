@@ -3,16 +3,16 @@ package com.davidgarcia.lumen.entidades.npc;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.davidgarcia.lumen.ia.MaquinaEstados;
+import com.davidgarcia.lumen.ia.estados.EstadoPatrulla;
 
 /** NPC patrullero que va y viene entre dos puntos fijos sin detectar al jugador. */
 public class Acechante extends NPC {
 
     private static final float VIDA = 20f;
     private static final float DANO = 25f;
-    private static final float VELOCIDAD = 25f;
+    private static final float VELOCIDAD_PATRULLA = 25f;
     private static final int TAMANO = 10;
-
-    private static final float UMBRAL_DESTINO = 1f;
 
     private static final Color COLOR_CUERPO = new Color(0.10f, 0.10f, 0.15f, 1f);
     private static final Color COLOR_OJOS = new Color(0.85f, 0.20f, 0.20f, 1f);
@@ -21,28 +21,21 @@ public class Acechante extends NPC {
     private final Vector2 puntoB;
     private Vector2 destinoActual;
 
+    private final MaquinaEstados<Acechante> maquinaEstados;
+
     public Acechante(float ax, float ay, float bx, float by) {
         super(ax, ay, VIDA, DANO);
         this.puntoA = new Vector2(ax, ay);
         this.puntoB = new Vector2(bx, by);
         this.destinoActual = puntoB;
+        this.maquinaEstados = new MaquinaEstados<>(this, new EstadoPatrulla());
         actualizarHitbox();
     }
 
     @Override
     public void actualizar(float delta) {
         if (!estaVivo()) return;
-
-        Vector2 hacia = new Vector2(destinoActual).sub(posicion);
-        float distancia = hacia.len();
-
-        if (distancia < UMBRAL_DESTINO) {
-            destinoActual = (destinoActual == puntoA) ? puntoB : puntoA;
-            return;
-        }
-
-        hacia.nor().scl(VELOCIDAD * delta);
-        posicion.add(hacia);
+        maquinaEstados.actualizar(delta);
         actualizarHitbox();
     }
 
@@ -65,6 +58,18 @@ public class Acechante extends NPC {
         renderer.rect(posicion.x + ojoOffsetX - ojoTamano / 2f,
             posicion.y + ojoOffsetY,
             ojoTamano, ojoTamano);
+    }
+
+    public Vector2 getDestinoActual() {
+        return destinoActual;
+    }
+
+    public void invertirDestino() {
+        destinoActual = (destinoActual == puntoA) ? puntoB : puntoA;
+    }
+
+    public float getVelocidadPatrulla() {
+        return VELOCIDAD_PATRULLA;
     }
 
     private void actualizarHitbox() {

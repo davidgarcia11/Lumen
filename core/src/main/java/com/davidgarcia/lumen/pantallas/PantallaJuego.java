@@ -13,6 +13,8 @@ import com.davidgarcia.lumen.config.ConfiguracionJuego;
 import com.davidgarcia.lumen.entidades.Entidad;
 import com.davidgarcia.lumen.entidades.Personaje;
 import com.davidgarcia.lumen.entidades.npc.Acechante;
+import com.davidgarcia.lumen.entidades.npc.Devorador;
+import com.davidgarcia.lumen.entidades.npc.Miron;
 import com.davidgarcia.lumen.entidades.npc.NPC;
 import com.davidgarcia.lumen.ui.HUD;
 
@@ -50,11 +52,27 @@ public class PantallaJuego extends ScreenAdapter {
         );
         entidades.add(personaje);
 
+        // Acechante: patrulla horizontal en la parte inferior.
         entidades.add(new Acechante(
             ConfiguracionJuego.ANCHO_MUNDO * 0.20f,
-            ConfiguracionJuego.ALTO_MUNDO * 0.30f,
+            ConfiguracionJuego.ALTO_MUNDO * 0.25f,
             ConfiguracionJuego.ANCHO_MUNDO * 0.80f,
-            ConfiguracionJuego.ALTO_MUNDO * 0.30f
+            ConfiguracionJuego.ALTO_MUNDO * 0.25f
+        ));
+
+        // Mirón: vigila desde una esquina superior, mirando hacia el centro (225º).
+        entidades.add(new Miron(
+            ConfiguracionJuego.ANCHO_MUNDO * 0.85f,
+            ConfiguracionJuego.ALTO_MUNDO * 0.75f,
+            225f,
+            personaje
+        ));
+
+        // Devorador: en la esquina opuesta, dormido hasta que detecte a Lumen.
+        entidades.add(new Devorador(
+            ConfiguracionJuego.ANCHO_MUNDO * 0.10f,
+            ConfiguracionJuego.ALTO_MUNDO * 0.80f,
+            personaje
         ));
 
         hud = new HUD(personaje);
