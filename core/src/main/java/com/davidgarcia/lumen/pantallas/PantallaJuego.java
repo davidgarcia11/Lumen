@@ -5,14 +5,14 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.davidgarcia.lumen.Main;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
+import com.davidgarcia.lumen.entidades.Personaje;
 
-/** Pantalla principal de juego: maneja al personaje y el bucle de simulación. */
+/** Pantalla principal de juego: orquesta el bucle de simulación de las entidades. */
 public class PantallaJuego extends ScreenAdapter {
 
     private final Main juego;
@@ -21,8 +21,7 @@ public class PantallaJuego extends ScreenAdapter {
     private Viewport viewport;
     private ShapeRenderer shapeRenderer;
 
-    private final Vector2 posicionLumen = new Vector2();
-    private final Vector2 direccion = new Vector2();
+    private Personaje personaje;
 
     public PantallaJuego(Main juego) {
         this.juego = juego;
@@ -36,7 +35,7 @@ public class PantallaJuego extends ScreenAdapter {
 
         shapeRenderer = new ShapeRenderer();
 
-        posicionLumen.set(
+        personaje = new Personaje(
             ConfiguracionJuego.ANCHO_MUNDO / 2f,
             ConfiguracionJuego.ALTO_MUNDO / 2f
         );
@@ -54,43 +53,22 @@ public class PantallaJuego extends ScreenAdapter {
             return;
         }
 
-        direccion.setZero();
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) direccion.y += 1;
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) direccion.y -= 1;
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) direccion.x += 1;
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) direccion.x -= 1;
-
-        if (!direccion.isZero()) {
-            direccion.nor().scl(ConfiguracionJuego.LUMEN_VELOCIDAD * delta);
-            posicionLumen.add(direccion);
-        }
-
-        limitarDentroDelMundo();
-    }
-
-    private void limitarDentroDelMundo() {
-        float mitad = ConfiguracionJuego.LUMEN_TAMANO / 2f;
-        posicionLumen.x = Math.max(mitad, Math.min(posicionLumen.x, ConfiguracionJuego.ANCHO_MUNDO - mitad));
-        posicionLumen.y = Math.max(mitad, Math.min(posicionLumen.y, ConfiguracionJuego.ALTO_MUNDO - mitad));
+        personaje.actualizar(delta);
     }
 
     private void dibujar() {
-        ScreenUtils.clear(ConfiguracionJuego.COLOR_ACENTO_NIVEL_1.r * 0.15f,
+        ScreenUtils.clear(
+            ConfiguracionJuego.COLOR_ACENTO_NIVEL_1.r * 0.15f,
             ConfiguracionJuego.COLOR_ACENTO_NIVEL_1.g * 0.15f,
-            ConfiguracionJuego.COLOR_ACENTO_NIVEL_1.b * 0.15f, 1f);
+            ConfiguracionJuego.COLOR_ACENTO_NIVEL_1.b * 0.15f,
+            1f
+        );
 
         camara.update();
         shapeRenderer.setProjectionMatrix(camara.combined);
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(ConfiguracionJuego.COLOR_LUMEN);
-        float mitad = ConfiguracionJuego.LUMEN_TAMANO / 2f;
-        shapeRenderer.rect(
-            posicionLumen.x - mitad,
-            posicionLumen.y - mitad,
-            ConfiguracionJuego.LUMEN_TAMANO,
-            ConfiguracionJuego.LUMEN_TAMANO
-        );
+        personaje.dibujar(shapeRenderer);
         shapeRenderer.end();
     }
 
