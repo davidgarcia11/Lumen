@@ -14,6 +14,7 @@ import com.davidgarcia.lumen.entidades.Entidad;
 import com.davidgarcia.lumen.entidades.Personaje;
 import com.davidgarcia.lumen.entidades.npc.Acechante;
 import com.davidgarcia.lumen.entidades.npc.NPC;
+import com.davidgarcia.lumen.ui.HUD;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,7 @@ public class PantallaJuego extends ScreenAdapter {
 
     private Personaje personaje;
     private final List<Entidad> entidades = new ArrayList<>();
+    private HUD hud;
 
     public PantallaJuego(Main juego) {
         this.juego = juego;
@@ -54,6 +56,8 @@ public class PantallaJuego extends ScreenAdapter {
             ConfiguracionJuego.ANCHO_MUNDO * 0.80f,
             ConfiguracionJuego.ALTO_MUNDO * 0.30f
         ));
+
+        hud = new HUD(personaje);
     }
 
     @Override
@@ -109,15 +113,19 @@ public class PantallaJuego extends ScreenAdapter {
             entidad.dibujar(shapeRenderer);
         }
         shapeRenderer.end();
+
+        hud.dibujar();
     }
 
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
+        if (hud != null) hud.resize(width, height);
     }
 
     @Override
     public void dispose() {
         if (shapeRenderer != null) shapeRenderer.dispose();
+        if (hud != null) hud.dispose();
     }
 }
