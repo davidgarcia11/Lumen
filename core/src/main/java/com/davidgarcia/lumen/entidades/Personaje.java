@@ -2,8 +2,9 @@ package com.davidgarcia.lumen.entidades;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
 
 /** Lumen, el espíritu de luz controlado por el jugador. */
@@ -11,16 +12,28 @@ public class Personaje extends Entidad {
 
     private final int tamano;
     private final float velocidad;
+    private final float energiaMaxima;
+    private final float consumoPorSegundo;
+
+    private float energia;
+
     private final Vector2 direccion = new Vector2();
+    private final Color colorActual = new Color();
 
     public Personaje(float x, float y) {
         super(x, y);
         this.tamano = ConfiguracionJuego.LUMEN_TAMANO;
         this.velocidad = ConfiguracionJuego.LUMEN_VELOCIDAD;
+        this.energiaMaxima = ConfiguracionJuego.LUMEN_ENERGIA_MAXIMA;
+        this.consumoPorSegundo = ConfiguracionJuego.LUMEN_CONSUMO_POR_SEGUNDO;
+        this.energia = energiaMaxima;
     }
 
     @Override
     public void actualizar(float delta) {
+        if (estaExtinguido()) return;
+
+        consumirEnergiaPorTiempo(delta);
         leerInputDireccional();
 
         if (!direccion.isZero()) {
@@ -34,13 +47,39 @@ public class Personaje extends Entidad {
     @Override
     public void dibujar(ShapeRenderer renderer) {
         float mitad = tamano / 2f;
-        renderer.setColor(ConfiguracionJuego.COLOR_LUMEN);
-        renderer.rect(
-            posicion.x - mitad,
-            posicion.y - mitad,
-            tamano,
-            tamano
-        );
+        actualizarColorSegunEnergia();
+        renderer.setColor(colorActual);
+        renderer.rect(posicion.x - mitad, posicion.y - mitad, tamano, tamano);
+    }
+
+    public void recibirDano(float cantidad) {
+        if (cantidad <= 0f) return;
+        energia = Math.max(0f, energia - cantidad);
+    }
+
+    public void recargarEnergia(float cantidad) {
+        if (cantidad <= 0f) return;
+        energia = Math.min(energiaMaxima, energia + cantidad);
+    }
+
+    public float getEnergia() {
+        return energia;
+    }
+
+    public float getEnergiaMaxima() {
+        return energiaMaxima;
+    }
+
+    public float getPorcentajeEnergia() {
+        return energia / energiaMaxima;
+    }
+
+    public boolean estaExtinguido() {
+        return energia <= 0f;
+    }
+
+    private void consumirEnergiaPorTiempo(float delta) {
+        energia = Math.max(0f, energia - consumoPorSegundo * delta);
     }
 
     private void leerInputDireccional() {
@@ -55,5 +94,16 @@ public class Personaje extends Entidad {
         float mitad = tamano / 2f;
         posicion.x = Math.max(mitad, Math.min(posicion.x, ConfiguracionJuego.ANCHO_MUNDO - mitad));
         posicion.y = Math.max(mitad, Math.min(posicion.y, ConfiguracionJuego.ALTO_MUNDO - mitad));
+    }
+
+    private void actualizarColorSegunEnergia() {
+        float porcentaje = getPorcentajeEnergia();
+        float intensidad = 0.25f + 0.75f * porcentaje;
+        colorActual.set(
+            ConfiguracionJuego.COLOR_LUMEN.r * intensidad,
+            ConfiguracionJuego.COLOR_LUMEN.g * intensidad,
+            ConfiguracionJuego.COLOR_LUMEN.b * intensidad,
+            1f
+        );
     }
 }
