@@ -21,6 +21,9 @@ public class Personaje extends Entidad {
     private float energia;
     private float tiempoInvulnerable = 0f;
 
+    private int puntos = 0;
+    private float tiempoSupervivencia = 0f;
+
     private final Vector2 direccion = new Vector2();
     private final Color colorActual = new Color();
 
@@ -39,6 +42,7 @@ public class Personaje extends Entidad {
         if (estaExtinguido()) return;
 
         consumirEnergiaPorTiempo(delta);
+        actualizarPuntosPorSupervivencia(delta);
         actualizarTiempoInvulnerable(delta);
         leerInputDireccional();
 
@@ -71,11 +75,16 @@ public class Personaje extends Entidad {
         energia = Math.min(energiaMaxima, energia + cantidad);
     }
 
+    public void sumarPuntos(int cantidad) {
+        if (cantidad > 0) puntos += cantidad;
+    }
+
     public float getEnergia() { return energia; }
     public float getEnergiaMaxima() { return energiaMaxima; }
     public float getPorcentajeEnergia() { return energia / energiaMaxima; }
     public boolean estaExtinguido() { return energia <= 0f; }
     public boolean esInvulnerable() { return tiempoInvulnerable > 0f; }
+    public int getPuntos() { return puntos; }
 
     private void actualizarHitbox() {
         float mitad = tamano / 2f;
@@ -85,6 +94,14 @@ public class Personaje extends Entidad {
     private void actualizarTiempoInvulnerable(float delta) {
         if (tiempoInvulnerable > 0f) {
             tiempoInvulnerable = Math.max(0f, tiempoInvulnerable - delta);
+        }
+    }
+
+    private void actualizarPuntosPorSupervivencia(float delta) {
+        tiempoSupervivencia += delta;
+        if (tiempoSupervivencia >= 1f) {
+            tiempoSupervivencia -= 1f;
+            puntos += 1;
         }
     }
 
