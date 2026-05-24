@@ -17,6 +17,7 @@ import com.davidgarcia.lumen.entidades.npc.Devorador;
 import com.davidgarcia.lumen.entidades.npc.Miron;
 import com.davidgarcia.lumen.entidades.npc.NPC;
 import com.davidgarcia.lumen.ui.HUD;
+import com.davidgarcia.lumen.ui.MenuPausa;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,9 @@ public class PantallaJuego extends ScreenAdapter {
     private Personaje personaje;
     private final List<Entidad> entidades = new ArrayList<>();
     private HUD hud;
+
+    private MenuPausa menuPausa;
+    private boolean pausado = false;
 
     public PantallaJuego(Main juego) {
         this.juego = juego;
@@ -52,7 +56,6 @@ public class PantallaJuego extends ScreenAdapter {
         );
         entidades.add(personaje);
 
-        // Acechante: patrulla horizontal en la parte inferior.
         entidades.add(new Acechante(
             ConfiguracionJuego.ANCHO_MUNDO * 0.20f,
             ConfiguracionJuego.ALTO_MUNDO * 0.25f,
@@ -60,7 +63,6 @@ public class PantallaJuego extends ScreenAdapter {
             ConfiguracionJuego.ALTO_MUNDO * 0.25f
         ));
 
-        // Mirón: vigila desde una esquina superior, mirando hacia el centro (225º).
         entidades.add(new Miron(
             ConfiguracionJuego.ANCHO_MUNDO * 0.85f,
             ConfiguracionJuego.ALTO_MUNDO * 0.75f,
@@ -68,7 +70,6 @@ public class PantallaJuego extends ScreenAdapter {
             personaje
         ));
 
-        // Devorador: en la esquina opuesta, dormido hasta que detecte a Lumen.
         entidades.add(new Devorador(
             ConfiguracionJuego.ANCHO_MUNDO * 0.10f,
             ConfiguracionJuego.ALTO_MUNDO * 0.80f,
@@ -76,17 +77,38 @@ public class PantallaJuego extends ScreenAdapter {
         ));
 
         hud = new HUD(personaje);
+
+        menuPausa = new MenuPausa(new MenuPausa.Acciones() {
+            @Override public void onReanudar() {
+                reanudar();
+            }
+            @Override public void onVolverAlMenu() {
+                juego.setScreen(new PantallaMenu(juego));
+            }
+            @Override public void onSalirDelJuego() {
+                Gdx.app.exit();
+            }
+        });
     }
 
     @Override
     public void render(float delta) {
-        actualizar(delta);
-        dibujar();
+        if (pausado) {
+            dibujarMundo();
+            menuPausa.dibujar(delta);
+            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+                reanudar();
+            }
+        } else {
+            actualizar(delta);
+            dibujarMundo();
+            hud.dibujar();
+        }
     }
 
     private void actualizar(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            juego.setScreen(new PantallaMenu(juego));
+            pausar();
             return;
         }
 
@@ -99,6 +121,16 @@ public class PantallaJuego extends ScreenAdapter {
         if (personaje.estaExtinguido()) {
             juego.setScreen(new PantallaMenu(juego));
         }
+    }
+
+    private void pausar() {
+        pausado = true;
+        menuPausa.mostrar();
+    }
+
+    private void reanudar() {
+        pausado = false;
+        Gdx.input.setInputProcessor(null);
     }
 
     private void detectarColisionesPersonajeNPC() {
@@ -115,7 +147,7 @@ public class PantallaJuego extends ScreenAdapter {
         }
     }
 
-    private void dibujar() {
+    private void dibujarMundo() {
         ScreenUtils.clear(
             ConfiguracionJuego.COLOR_ACENTO_NIVEL_1.r * 0.15f,
             ConfiguracionJuego.COLOR_ACENTO_NIVEL_1.g * 0.15f,
@@ -131,19 +163,19 @@ public class PantallaJuego extends ScreenAdapter {
             entidad.dibujar(shapeRenderer);
         }
         shapeRenderer.end();
-
-        hud.dibujar();
     }
 
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
         if (hud != null) hud.resize(width, height);
+        if (menuPausa != null) menuPausa.resize(width, height);
     }
 
     @Override
     public void dispose() {
         if (shapeRenderer != null) shapeRenderer.dispose();
         if (hud != null) hud.dispose();
+        if (menuPausa != null) menuPausa.dispose();
     }
 }
