@@ -10,12 +10,16 @@ import com.davidgarcia.lumen.config.ConfiguracionJuego;
 /** Lumen, el espíritu de luz controlado por el jugador. */
 public class Personaje extends Entidad {
 
+    private static final float TIEMPO_INVULNERABILIDAD = 0.5f;
+    private static final float PARPADEO_FRECUENCIA = 20f;
+
     private final int tamano;
     private final float velocidad;
     private final float energiaMaxima;
     private final float consumoPorSegundo;
 
     private float energia;
+    private float tiempoInvulnerable = 0f;
 
     private final Vector2 direccion = new Vector2();
     private final Color colorActual = new Color();
@@ -27,6 +31,7 @@ public class Personaje extends Entidad {
         this.energiaMaxima = ConfiguracionJuego.LUMEN_ENERGIA_MAXIMA;
         this.consumoPorSegundo = ConfiguracionJuego.LUMEN_CONSUMO_POR_SEGUNDO;
         this.energia = energiaMaxima;
+        actualizarHitbox();
     }
 
     @Override
@@ -34,6 +39,7 @@ public class Personaje extends Entidad {
         if (estaExtinguido()) return;
 
         consumirEnergiaPorTiempo(delta);
+        actualizarTiempoInvulnerable(delta);
         leerInputDireccional();
 
         if (!direccion.isZero()) {
@@ -42,19 +48,22 @@ public class Personaje extends Entidad {
         }
 
         limitarDentroDelMundo();
+        actualizarHitbox();
     }
 
     @Override
     public void dibujar(ShapeRenderer renderer) {
-        float mitad = tamano / 2f;
+        if (estaParpadeando()) return;
         actualizarColorSegunEnergia();
         renderer.setColor(colorActual);
+        float mitad = tamano / 2f;
         renderer.rect(posicion.x - mitad, posicion.y - mitad, tamano, tamano);
     }
 
     public void recibirDano(float cantidad) {
-        if (cantidad <= 0f) return;
+        if (cantidad <= 0f || esInvulnerable()) return;
         energia = Math.max(0f, energia - cantidad);
+        tiempoInvulnerable = TIEMPO_INVULNERABILIDAD;
     }
 
     public void recargarEnergia(float cantidad) {
@@ -62,20 +71,26 @@ public class Personaje extends Entidad {
         energia = Math.min(energiaMaxima, energia + cantidad);
     }
 
-    public float getEnergia() {
-        return energia;
+    public float getEnergia() { return energia; }
+    public float getEnergiaMaxima() { return energiaMaxima; }
+    public float getPorcentajeEnergia() { return energia / energiaMaxima; }
+    public boolean estaExtinguido() { return energia <= 0f; }
+    public boolean esInvulnerable() { return tiempoInvulnerable > 0f; }
+
+    private void actualizarHitbox() {
+        float mitad = tamano / 2f;
+        hitbox.set(posicion.x - mitad, posicion.y - mitad, tamano, tamano);
     }
 
-    public float getEnergiaMaxima() {
-        return energiaMaxima;
+    private void actualizarTiempoInvulnerable(float delta) {
+        if (tiempoInvulnerable > 0f) {
+            tiempoInvulnerable = Math.max(0f, tiempoInvulnerable - delta);
+        }
     }
 
-    public float getPorcentajeEnergia() {
-        return energia / energiaMaxima;
-    }
-
-    public boolean estaExtinguido() {
-        return energia <= 0f;
+    private boolean estaParpadeando() {
+        if (!esInvulnerable()) return false;
+        return ((int) (tiempoInvulnerable * PARPADEO_FRECUENCIA)) % 2 == 0;
     }
 
     private void consumirEnergiaPorTiempo(float delta) {
