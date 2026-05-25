@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.davidgarcia.lumen.Main;
+import com.davidgarcia.lumen.audio.GestorAudio;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
 import com.davidgarcia.lumen.entidades.Entidad;
 import com.davidgarcia.lumen.entidades.Personaje;
@@ -49,6 +50,8 @@ public class PantallaJuego extends ScreenAdapter {
         viewport.apply(true);
 
         shapeRenderer = new ShapeRenderer();
+
+        GestorAudio.cambiarMusica(GestorAudio.PistaMusica.JUEGO);
 
         personaje = new Personaje(
             ConfiguracionJuego.ANCHO_MUNDO / 2f,
@@ -142,6 +145,7 @@ public class PantallaJuego extends ScreenAdapter {
             if (!npc.estaVivo()) continue;
             if (personaje.getHitbox().overlaps(npc.getHitbox())) {
                 personaje.recibirDano(npc.getDanoAlJugador());
+                GestorAudio.reproducirEfecto(GestorAudio.Efecto.DANO);
                 return;
             }
         }

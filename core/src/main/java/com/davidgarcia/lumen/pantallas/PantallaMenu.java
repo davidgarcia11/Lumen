@@ -2,6 +2,9 @@ package com.davidgarcia.lumen.pantallas;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -11,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.davidgarcia.lumen.Main;
+import com.davidgarcia.lumen.audio.GestorAudio;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
 import com.davidgarcia.lumen.ui.SkinFactory;
 
@@ -31,6 +35,8 @@ public class PantallaMenu extends ScreenAdapter {
         Gdx.input.setInputProcessor(stage);
         skin = SkinFactory.crearSkinBasica();
 
+        GestorAudio.cambiarMusica(GestorAudio.PistaMusica.MENU);
+
         Table tabla = new Table();
         tabla.setFillParent(true);
         stage.addActor(tabla);
@@ -43,28 +49,34 @@ public class PantallaMenu extends ScreenAdapter {
         TextButton botonConfiguracion = new TextButton("Configuración", skin);
         TextButton botonSalir = new TextButton("Salir", skin);
 
+        anadirSonidoUI(botonNuevaPartida);
+        anadirSonidoUI(botonRecords);
+        anadirSonidoUI(botonInstrucciones);
+        anadirSonidoUI(botonConfiguracion);
+        anadirSonidoUI(botonSalir);
+
         botonNuevaPartida.addListener(new ChangeListener() {
-            @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
+            @Override public void changed(ChangeEvent event, Actor actor) {
                 juego.setScreen(new PantallaJuego(juego));
             }
         });
         botonRecords.addListener(new ChangeListener() {
-            @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
+            @Override public void changed(ChangeEvent event, Actor actor) {
                 juego.setScreen(new PantallaRecords(juego));
             }
         });
         botonInstrucciones.addListener(new ChangeListener() {
-            @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
+            @Override public void changed(ChangeEvent event, Actor actor) {
                 juego.setScreen(new PantallaInstrucciones(juego));
             }
         });
         botonConfiguracion.addListener(new ChangeListener() {
-            @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
+            @Override public void changed(ChangeEvent event, Actor actor) {
                 juego.setScreen(new PantallaConfiguracion(juego));
             }
         });
         botonSalir.addListener(new ChangeListener() {
-            @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
+            @Override public void changed(ChangeEvent event, Actor actor) {
                 Gdx.app.exit();
             }
         });
@@ -76,6 +88,19 @@ public class PantallaMenu extends ScreenAdapter {
         tabla.add(botonInstrucciones).width(300).padBottom(15).row();
         tabla.add(botonConfiguracion).width(300).padBottom(15).row();
         tabla.add(botonSalir).width(300).row();
+    }
+
+    static void anadirSonidoUI(TextButton boton) {
+        boton.addListener(new InputListener() {
+            @Override public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                if (pointer == -1) GestorAudio.reproducirEfecto(GestorAudio.Efecto.HOVER);
+            }
+        });
+        boton.addListener(new ChangeListener() {
+            @Override public void changed(ChangeEvent event, Actor actor) {
+                GestorAudio.reproducirEfecto(GestorAudio.Efecto.CLICK);
+            }
+        });
     }
 
     @Override
