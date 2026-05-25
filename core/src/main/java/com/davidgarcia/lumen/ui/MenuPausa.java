@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -14,12 +15,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.davidgarcia.lumen.audio.GestorAudio;
 import com.davidgarcia.lumen.config.GestorPreferencias;
 
 /** Menú de pausa que se muestra superpuesto sobre la PantallaJuego. */
 public class MenuPausa {
 
-    /** Callbacks que el MenuPausa dispara hacia la PantallaJuego. */
     public interface Acciones {
         void onReanudar();
         void onVolverAlMenu();
@@ -50,6 +51,7 @@ public class MenuPausa {
         Label titulo = new Label("PAUSA", skin, "titulo");
 
         TextButton botonReanudar = new TextButton("Reanudar", skin);
+        anadirSonidoUI(botonReanudar);
         botonReanudar.addListener(new ChangeListener() {
             @Override public void changed(ChangeEvent event, Actor actor) {
                 acciones.onReanudar();
@@ -57,14 +59,18 @@ public class MenuPausa {
         });
 
         botonSonido = new TextButton(textoBotonSonido(), skin);
+        anadirSonidoUI(botonSonido);
         botonSonido.addListener(new ChangeListener() {
             @Override public void changed(ChangeEvent event, Actor actor) {
-                GestorPreferencias.setSonidoActivado(!GestorPreferencias.isSonidoActivado());
+                boolean nuevo = !GestorPreferencias.isSonidoActivado();
+                GestorPreferencias.setSonidoActivado(nuevo);
+                GestorAudio.refrescarVolumenes();
                 botonSonido.setText(textoBotonSonido());
             }
         });
 
         TextButton botonMenu = new TextButton("Menú principal", skin);
+        anadirSonidoUI(botonMenu);
         botonMenu.addListener(new ChangeListener() {
             @Override public void changed(ChangeEvent event, Actor actor) {
                 acciones.onVolverAlMenu();
@@ -72,6 +78,7 @@ public class MenuPausa {
         });
 
         TextButton botonSalir = new TextButton("Salir del juego", skin);
+        anadirSonidoUI(botonSalir);
         botonSalir.addListener(new ChangeListener() {
             @Override public void changed(ChangeEvent event, Actor actor) {
                 acciones.onSalirDelJuego();
@@ -114,6 +121,14 @@ public class MenuPausa {
         stage.dispose();
         skin.dispose();
         shapes.dispose();
+    }
+
+    private void anadirSonidoUI(TextButton boton) {
+        boton.addListener(new InputListener() {
+            @Override public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                if (pointer == -1) GestorAudio.reproducirEfecto(GestorAudio.Efecto.HOVER);
+            }
+        });
     }
 
     private String textoBotonSonido() {

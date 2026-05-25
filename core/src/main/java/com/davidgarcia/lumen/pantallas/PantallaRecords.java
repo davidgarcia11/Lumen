@@ -2,6 +2,9 @@ package com.davidgarcia.lumen.pantallas;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -11,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.davidgarcia.lumen.Main;
+import com.davidgarcia.lumen.audio.GestorAudio;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
 import com.davidgarcia.lumen.ui.SkinFactory;
 
@@ -52,8 +56,14 @@ public class PantallaRecords extends ScreenAdapter {
         mensajeVacio.setAlignment(com.badlogic.gdx.utils.Align.center);
 
         TextButton botonVolver = new TextButton("Volver", skin);
+        botonVolver.addListener(new InputListener() {
+            @Override public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                if (pointer == -1) GestorAudio.reproducirEfecto(GestorAudio.Efecto.HOVER);
+            }
+        });
         botonVolver.addListener(new ChangeListener() {
-            @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
+            @Override public void changed(ChangeEvent event, Actor actor) {
+                GestorAudio.reproducirEfecto(GestorAudio.Efecto.CLICK);
                 juego.setScreen(new PantallaMenu(juego));
             }
         });

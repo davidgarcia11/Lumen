@@ -3,6 +3,9 @@ package com.davidgarcia.lumen.pantallas;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -13,6 +16,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.davidgarcia.lumen.Main;
+import com.davidgarcia.lumen.audio.GestorAudio;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
 import com.davidgarcia.lumen.config.GestorPreferencias;
 import com.davidgarcia.lumen.ui.SkinFactory;
@@ -48,9 +52,10 @@ public class PantallaConfiguracion extends ScreenAdapter {
 
         Slider sliderMusica = crearSliderVolumen(GestorPreferencias.getVolumenMusica());
         sliderMusica.addListener(new ChangeListener() {
-            @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
+            @Override public void changed(ChangeEvent event, Actor actor) {
                 int valor = (int) sliderMusica.getValue();
                 GestorPreferencias.setVolumenMusica(valor);
+                GestorAudio.refrescarVolumenes();
                 etiquetaMusica.setText("Música:    " + valor);
             }
         });
@@ -58,7 +63,7 @@ public class PantallaConfiguracion extends ScreenAdapter {
 
         Slider sliderEfectos = crearSliderVolumen(GestorPreferencias.getVolumenEfectos());
         sliderEfectos.addListener(new ChangeListener() {
-            @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
+            @Override public void changed(ChangeEvent event, Actor actor) {
                 int valor = (int) sliderEfectos.getValue();
                 GestorPreferencias.setVolumenEfectos(valor);
                 etiquetaEfectos.setText("Efectos:   " + valor);
@@ -67,8 +72,10 @@ public class PantallaConfiguracion extends ScreenAdapter {
         etiquetaEfectos = new Label("Efectos:   " + GestorPreferencias.getVolumenEfectos(), skin);
 
         TextButton botonDificultad = new TextButton(textoDificultad(), skin);
+        anadirHover(botonDificultad);
         botonDificultad.addListener(new ChangeListener() {
-            @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
+            @Override public void changed(ChangeEvent event, Actor actor) {
+                GestorAudio.reproducirEfecto(GestorAudio.Efecto.CLICK);
                 cambiarDificultad();
                 botonDificultad.setText(textoDificultad());
                 etiquetaDificultad.setText("Dificultad: " + GestorPreferencias.getDificultad().name());
@@ -77,8 +84,10 @@ public class PantallaConfiguracion extends ScreenAdapter {
         etiquetaDificultad = new Label("Dificultad: " + GestorPreferencias.getDificultad().name(), skin);
 
         TextButton botonVolver = new TextButton("Volver", skin);
+        anadirHover(botonVolver);
         botonVolver.addListener(new ChangeListener() {
-            @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
+            @Override public void changed(ChangeEvent event, Actor actor) {
+                GestorAudio.reproducirEfecto(GestorAudio.Efecto.CLICK);
                 juego.setScreen(new PantallaMenu(juego));
             }
         });
@@ -134,6 +143,14 @@ public class PantallaConfiguracion extends ScreenAdapter {
         Slider slider = new Slider(0f, 100f, 1f, false, skin);
         slider.setValue(valorInicial);
         return slider;
+    }
+
+    private void anadirHover(TextButton boton) {
+        boton.addListener(new InputListener() {
+            @Override public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                if (pointer == -1) GestorAudio.reproducirEfecto(GestorAudio.Efecto.HOVER);
+            }
+        });
     }
 
     private String textoDificultad() {

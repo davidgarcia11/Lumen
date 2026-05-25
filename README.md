@@ -69,4 +69,14 @@ David García — Alumno de Programación Multimedia y Dispositivos Móviles, SE
 
 ## Licencia y créditos
 
-Proyecto académico. Los assets gráficos y de audio utilizados son recursos gratuitos de terceros con licencias compatibles (Kenney, OpenGameArt, itch.io u otros). Los créditos completos se publicarán en la wiki del repositorio.
+Proyecto académico. Los assets gráficos y de audio utilizados son recursos gratuitos de terceros con licencias compatibles.
+
+### Audio
+
+**Música** — Kevin MacLeod ([incompetech.com](https://incompetech.com/)), bajo licencia [Creative Commons: By Attribution 4.0](https://creativecommons.org/licenses/by/4.0/):
+- `audio/musica/menu.mp3`
+- `audio/musica/juego.mp3`
+
+**Efectos** — Kenney ([kenney.nl](https://kenney.nl/)), bajo licencia [Creative Commons CC0](https://creativecommons.org/publicdomain/zero/1.0/):
+- Pack *UI Audio* — efectos `hover.ogg`, `click.ogg`.
+- Pack *Impact Sounds* — efectos `dano.ogg`, `despertar.ogg`.
