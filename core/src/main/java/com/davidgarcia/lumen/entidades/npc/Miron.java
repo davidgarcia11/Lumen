@@ -1,12 +1,14 @@
 package com.davidgarcia.lumen.entidades.npc;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.davidgarcia.lumen.entidades.Personaje;
 import com.davidgarcia.lumen.ia.MaquinaEstados;
 import com.davidgarcia.lumen.ia.estados.EstadoVigila;
+import com.davidgarcia.lumen.utiles.SpritesEnemigos;
 
 /** NPC que detecta a Lumen con cono de visión. Gira lentamente y persigue si lo ve. */
 public class Miron extends NPC {
@@ -14,18 +16,14 @@ public class Miron extends NPC {
     private static final float VIDA = 35f;
     private static final float DANO = 35f;
     private static final float VELOCIDAD_PERSECUCION = 35f;
-    private static final int TAMANO = 12;
+    private static final int TAMANO_HITBOX = 12;
+    private static final float TAMANO_VISUAL = 20f;
 
-    /** Radio del cono de visión, en píxeles del mundo. */
     public static final float ALCANCE_VISION = 60f;
-    /** Mitad del ángulo de apertura del cono (en grados). 30º = cono total de 60º. */
     public static final float SEMIANGULO_VISION = 30f;
-    /** Velocidad de rotación pasiva, en grados por segundo. */
     public static final float VELOCIDAD_GIRO = 35f;
 
-    private static final Color COLOR_CUERPO = new Color(0.15f, 0.05f, 0.10f, 1f);
-    private static final Color COLOR_OJO = new Color(0.95f, 0.25f, 0.30f, 1f);
-    private static final Color COLOR_CONO = new Color(0.95f, 0.25f, 0.30f, 0.18f);
+    private static final Color COLOR_CONO = new Color(0.95f, 0.85f, 0.30f, 0.18f);
 
     private float anguloVisionGrados;
     private final Vector2 ultimaPosicionVistaJugador = new Vector2();
@@ -46,28 +44,26 @@ public class Miron extends NPC {
     public void actualizar(float delta) {
         if (!estaVivo()) return;
         maquinaEstados.actualizar(delta);
+        SpritesEnemigos.miron.actualizar(delta);
         actualizarHitbox();
     }
 
     @Override
-    public void dibujar(ShapeRenderer renderer) {
+    public void dibujar(SpriteBatch batch, ShapeRenderer shapes) {
         if (!estaVivo()) return;
-
-        dibujarConoVision(renderer);
-
-        float mitad = TAMANO / 2f;
-        renderer.setColor(COLOR_CUERPO);
-        renderer.rect(posicion.x - mitad, posicion.y - mitad, TAMANO, TAMANO);
-
-        Vector2 frente = new Vector2(1f, 0f).rotateDeg(anguloVisionGrados).scl(TAMANO * 0.35f);
-        float ojoTamano = TAMANO * 0.22f;
-        renderer.setColor(COLOR_OJO);
-        renderer.rect(posicion.x + frente.x - ojoTamano / 2f,
-            posicion.y + frente.y - ojoTamano / 2f,
-            ojoTamano, ojoTamano);
+        var frame = SpritesEnemigos.miron.getFrameActual();
+        batch.draw(
+            frame,
+            posicion.x - TAMANO_VISUAL / 2f,
+            posicion.y - TAMANO_VISUAL / 2f,
+            TAMANO_VISUAL,
+            TAMANO_VISUAL
+        );
     }
 
-    private void dibujarConoVision(ShapeRenderer renderer) {
+    /** Dibuja el cono de visión. Se llama desde PantallaJuego en una pasada separada con ShapeRenderer. */
+    public void dibujarConoVision(ShapeRenderer renderer) {
+        if (!estaVivo()) return;
         renderer.setColor(COLOR_CONO);
         int segmentos = 12;
         for (int i = 0; i < segmentos; i++) {
@@ -134,12 +130,11 @@ public class Miron extends NPC {
     }
 
     private float diferenciaAngular(float a, float b) {
-        float d = (a - b + 540f) % 360f - 180f;
-        return d;
+        return (a - b + 540f) % 360f - 180f;
     }
 
     private void actualizarHitbox() {
-        float mitad = TAMANO / 2f;
-        hitbox.set(posicion.x - mitad, posicion.y - mitad, TAMANO, TAMANO);
+        float mitad = TAMANO_HITBOX / 2f;
+        hitbox.set(posicion.x - mitad, posicion.y - mitad, TAMANO_HITBOX, TAMANO_HITBOX);
     }
 }

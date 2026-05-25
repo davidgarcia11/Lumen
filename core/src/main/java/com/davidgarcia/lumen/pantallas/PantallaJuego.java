@@ -3,7 +3,9 @@ package com.davidgarcia.lumen.pantallas;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -30,6 +32,7 @@ public class PantallaJuego extends ScreenAdapter {
 
     private OrthographicCamera camara;
     private Viewport viewport;
+    private SpriteBatch batch;
     private ShapeRenderer shapeRenderer;
 
     private Personaje personaje;
@@ -49,6 +52,7 @@ public class PantallaJuego extends ScreenAdapter {
         viewport = new FitViewport(ConfiguracionJuego.ANCHO_MUNDO, ConfiguracionJuego.ALTO_MUNDO, camara);
         viewport.apply(true);
 
+        batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
 
         GestorAudio.cambiarMusica(GestorAudio.PistaMusica.JUEGO);
@@ -160,13 +164,27 @@ public class PantallaJuego extends ScreenAdapter {
         );
 
         camara.update();
+        batch.setProjectionMatrix(camara.combined);
         shapeRenderer.setProjectionMatrix(camara.combined);
 
+        // Pasada 1: geometría translúcida que va DEBAJO (conos de visión del Mirón).
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         for (Entidad entidad : entidades) {
-            entidad.dibujar(shapeRenderer);
+            if (entidad instanceof Miron) {
+                ((Miron) entidad).dibujarConoVision(shapeRenderer);
+            }
         }
         shapeRenderer.end();
+
+        // Pasada 2: sprites de todas las entidades.
+        batch.begin();
+        for (Entidad entidad : entidades) {
+            entidad.dibujar(batch, shapeRenderer);
+        }
+        batch.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
     }
 
     @Override
@@ -178,6 +196,7 @@ public class PantallaJuego extends ScreenAdapter {
 
     @Override
     public void dispose() {
+        if (batch != null) batch.dispose();
         if (shapeRenderer != null) shapeRenderer.dispose();
         if (hud != null) hud.dispose();
         if (menuPausa != null) menuPausa.dispose();

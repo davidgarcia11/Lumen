@@ -22,12 +22,19 @@ public final class ConfiguracionJuego {
     public static final Color COLOR_LUMEN = new Color(0.95f, 0.97f, 1.0f, 1f);
 
     // ─── Lumen ──────────────────────────────────────────────────────────────
-    public static final int LUMEN_TAMANO = 12;
+    /** Tamaño de la hitbox cuadrada de Lumen, en unidades del mundo. */
+    public static final int LUMEN_TAMANO_HITBOX = 12;
+    /** Tamaño visual del sprite de Lumen, en unidades del mundo. */
+    public static final float LUMEN_TAMANO_VISUAL = 24f;
     public static final float LUMEN_VELOCIDAD = 80f;
     /** Energía máxima al inicio de un nivel o tras cargar partida. */
     public static final float LUMEN_ENERGIA_MAXIMA = 100f;
     /** Cuánta energía pierde por segundo solo por estar en el mundo (consumo pasivo). */
     public static final float LUMEN_CONSUMO_POR_SEGUNDO = 1.5f;
+
+    // ─── Invulnerabilidad ───────────────────────────────────────────────────
+    /** Duración (en segundos) de los i-frames tras recibir daño. */
+    public static final float INVULNERABILIDAD_DURACION = 0.5f;
 
     private ConfiguracionJuego() {
         // Clase de constantes; no se instancia.
