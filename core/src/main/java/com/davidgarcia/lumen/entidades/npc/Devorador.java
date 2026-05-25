@@ -1,11 +1,12 @@
 package com.davidgarcia.lumen.entidades.npc;
 
-import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.davidgarcia.lumen.entidades.Personaje;
 import com.davidgarcia.lumen.ia.MaquinaEstados;
 import com.davidgarcia.lumen.ia.estados.EstadoDormido;
+import com.davidgarcia.lumen.utiles.SpritesEnemigos;
 
 /** NPC pesado que despierta al detectar al jugador y lo persigue por toda la sala. */
 public class Devorador extends NPC {
@@ -13,13 +14,11 @@ public class Devorador extends NPC {
     private static final float VIDA = 60f;
     private static final float DANO = 50f;
     private static final float VELOCIDAD_PERSECUCION = 32f;
-    private static final int TAMANO = 16;
+    private static final int TAMANO_HITBOX = 16;
+    private static final float TAMANO_VISUAL = 24f;
 
     /** Distancia a la que detecta al jugador y despierta. */
     public static final float RADIO_DETECCION = 90f;
-
-    private static final Color COLOR_CUERPO = new Color(0.05f, 0.12f, 0.10f, 1f);
-    private static final Color COLOR_OJOS = new Color(0.20f, 0.85f, 0.95f, 1f);
 
     private final Personaje objetivo;
     private final MaquinaEstados<Devorador> maquinaEstados;
@@ -35,27 +34,21 @@ public class Devorador extends NPC {
     public void actualizar(float delta) {
         if (!estaVivo()) return;
         maquinaEstados.actualizar(delta);
+        SpritesEnemigos.devorador.actualizar(delta);
         actualizarHitbox();
     }
 
     @Override
-    public void dibujar(ShapeRenderer renderer) {
+    public void dibujar(SpriteBatch batch, ShapeRenderer shapes) {
         if (!estaVivo()) return;
-
-        float mitad = TAMANO / 2f;
-        renderer.setColor(COLOR_CUERPO);
-        renderer.rect(posicion.x - mitad, posicion.y - mitad, TAMANO, TAMANO);
-
-        renderer.setColor(COLOR_OJOS);
-        float ojoTamano = TAMANO * 0.20f;
-        float ojoOffsetX = TAMANO * 0.25f;
-        float ojoOffsetY = TAMANO * 0.10f;
-        renderer.rect(posicion.x - ojoOffsetX - ojoTamano / 2f,
-            posicion.y + ojoOffsetY,
-            ojoTamano, ojoTamano);
-        renderer.rect(posicion.x + ojoOffsetX - ojoTamano / 2f,
-            posicion.y + ojoOffsetY,
-            ojoTamano, ojoTamano);
+        var frame = SpritesEnemigos.devorador.getFrameActual();
+        batch.draw(
+            frame,
+            posicion.x - TAMANO_VISUAL / 2f,
+            posicion.y - TAMANO_VISUAL / 2f,
+            TAMANO_VISUAL,
+            TAMANO_VISUAL
+        );
     }
 
     public boolean detectaJugador() {
@@ -85,7 +78,7 @@ public class Devorador extends NPC {
     }
 
     private void actualizarHitbox() {
-        float mitad = TAMANO / 2f;
-        hitbox.set(posicion.x - mitad, posicion.y - mitad, TAMANO, TAMANO);
+        float mitad = TAMANO_HITBOX / 2f;
+        hitbox.set(posicion.x - mitad, posicion.y - mitad, TAMANO_HITBOX, TAMANO_HITBOX);
     }
 }

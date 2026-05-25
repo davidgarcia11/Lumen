@@ -2,34 +2,35 @@ package com.davidgarcia.lumen.entidades;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
+import com.davidgarcia.lumen.utiles.Animacion;
+import com.davidgarcia.lumen.utiles.SpritesLumen;
 
-/** Lumen, el espíritu de luz controlado por el jugador. */
+/** Personaje controlado por el jugador. */
 public class Personaje extends Entidad {
 
-    private static final float TIEMPO_INVULNERABILIDAD = 0.5f;
-    private static final float PARPADEO_FRECUENCIA = 20f;
+    private enum Direccion { ABAJO, ARRIBA, IZQUIERDA, DERECHA }
 
-    private final int tamano;
+    private final Vector2 direccionMovimiento = new Vector2();
+
     private final float velocidad;
     private final float energiaMaxima;
     private final float consumoPorSegundo;
 
     private float energia;
-    private float tiempoInvulnerable = 0f;
-
+    private float invulnerabilidadRestante = 0f;
+    private float tiempoParpadeo = 0f;
+    private float acumuladorPuntos = 0f;
     private int puntos = 0;
-    private float tiempoSupervivencia = 0f;
 
-    private final Vector2 direccion = new Vector2();
-    private final Color colorActual = new Color();
+    private Direccion direccionActual = Direccion.ABAJO;
+    private boolean moviendose = false;
 
     public Personaje(float x, float y) {
         super(x, y);
-        this.tamano = ConfiguracionJuego.LUMEN_TAMANO;
         this.velocidad = ConfiguracionJuego.LUMEN_VELOCIDAD;
         this.energiaMaxima = ConfiguracionJuego.LUMEN_ENERGIA_MAXIMA;
         this.consumoPorSegundo = ConfiguracionJuego.LUMEN_CONSUMO_POR_SEGUNDO;
@@ -39,103 +40,133 @@ public class Personaje extends Entidad {
 
     @Override
     public void actualizar(float delta) {
-        if (estaExtinguido()) return;
-
-        consumirEnergiaPorTiempo(delta);
-        actualizarPuntosPorSupervivencia(delta);
-        actualizarTiempoInvulnerable(delta);
-        leerInputDireccional();
-
-        if (!direccion.isZero()) {
-            direccion.nor().scl(velocidad * delta);
-            posicion.add(direccion);
-        }
-
-        limitarDentroDelMundo();
+        leerEntrada();
+        mover(delta);
+        consumirEnergia(delta);
+        acumularPuntos(delta);
+        actualizarInvulnerabilidad(delta);
+        actualizarAnimaciones(delta);
         actualizarHitbox();
     }
 
+    private void leerEntrada() {
+        direccionMovimiento.setZero();
+        if (Gdx.input.isKeyPressed(Input.Keys.W)) direccionMovimiento.y += 1f;
+        if (Gdx.input.isKeyPressed(Input.Keys.S)) direccionMovimiento.y -= 1f;
+        if (Gdx.input.isKeyPressed(Input.Keys.D)) direccionMovimiento.x += 1f;
+        if (Gdx.input.isKeyPressed(Input.Keys.A)) direccionMovimiento.x -= 1f;
+        moviendose = !direccionMovimiento.isZero();
+        if (moviendose) {
+            direccionMovimiento.nor();
+            actualizarDireccionVisual();
+        }
+    }
+
+    private void actualizarDireccionVisual() {
+        if (Math.abs(direccionMovimiento.x) > Math.abs(direccionMovimiento.y)) {
+            direccionActual = direccionMovimiento.x > 0 ? Direccion.DERECHA : Direccion.IZQUIERDA;
+        } else {
+            direccionActual = direccionMovimiento.y > 0 ? Direccion.ARRIBA : Direccion.ABAJO;
+        }
+    }
+
+    private void mover(float delta) {
+        posicion.x += direccionMovimiento.x * velocidad * delta;
+        posicion.y += direccionMovimiento.y * velocidad * delta;
+        clampAlMundo();
+    }
+
+    private void clampAlMundo() {
+        float margen = ConfiguracionJuego.LUMEN_TAMANO_HITBOX / 2f;
+        posicion.x = Math.max(margen, Math.min(posicion.x, ConfiguracionJuego.ANCHO_MUNDO - margen));
+        posicion.y = Math.max(margen, Math.min(posicion.y, ConfiguracionJuego.ALTO_MUNDO - margen));
+    }
+
+    private void consumirEnergia(float delta) {
+        energia = Math.max(0f, energia - consumoPorSegundo * delta);
+    }
+
+    private void acumularPuntos(float delta) {
+        acumuladorPuntos += delta;
+        while (acumuladorPuntos >= 1f) {
+            puntos += 1;
+            acumuladorPuntos -= 1f;
+        }
+    }
+
+    private void actualizarInvulnerabilidad(float delta) {
+        if (invulnerabilidadRestante > 0f) {
+            invulnerabilidadRestante -= delta;
+            tiempoParpadeo += delta;
+        } else {
+            tiempoParpadeo = 0f;
+        }
+    }
+
+    private void actualizarAnimaciones(float delta) {
+        SpritesLumen.idle.actualizar(delta);
+        SpritesLumen.andarAbajo.actualizar(delta);
+        SpritesLumen.andarArriba.actualizar(delta);
+        SpritesLumen.andarDerecha.actualizar(delta);
+        SpritesLumen.andarIzquierda.actualizar(delta);
+    }
+
+    private void actualizarHitbox() {
+        float lado = ConfiguracionJuego.LUMEN_TAMANO_HITBOX;
+        hitbox.set(posicion.x - lado / 2f, posicion.y - lado / 2f, lado, lado);
+    }
+
     @Override
-    public void dibujar(ShapeRenderer renderer) {
-        if (estaParpadeando()) return;
-        actualizarColorSegunEnergia();
-        renderer.setColor(colorActual);
-        float mitad = tamano / 2f;
-        renderer.rect(posicion.x - mitad, posicion.y - mitad, tamano, tamano);
+    public void dibujar(SpriteBatch batch, ShapeRenderer shapes) {
+        if (estaParpadeandoInvisible()) return;
+
+        Animacion animacion = animacionActual();
+        var frame = animacion.getFrameActual();
+        float anchoSprite = ConfiguracionJuego.LUMEN_TAMANO_VISUAL;
+        float altoSprite = ConfiguracionJuego.LUMEN_TAMANO_VISUAL;
+
+        batch.draw(
+            frame,
+            posicion.x - anchoSprite / 2f,
+            posicion.y - altoSprite / 2f,
+            anchoSprite,
+            altoSprite
+        );
     }
 
-    public void recibirDano(float cantidad) {
-        if (cantidad <= 0f || esInvulnerable()) return;
-        energia = Math.max(0f, energia - cantidad);
-        tiempoInvulnerable = TIEMPO_INVULNERABILIDAD;
+    private Animacion animacionActual() {
+        if (!moviendose) return SpritesLumen.idle;
+        switch (direccionActual) {
+            case ARRIBA:    return SpritesLumen.andarArriba;
+            case IZQUIERDA: return SpritesLumen.andarIzquierda;
+            case DERECHA:   return SpritesLumen.andarDerecha;
+            case ABAJO:
+            default:        return SpritesLumen.andarAbajo;
+        }
     }
 
-    public void recargarEnergia(float cantidad) {
-        if (cantidad <= 0f) return;
-        energia = Math.min(energiaMaxima, energia + cantidad);
+    private boolean estaParpadeandoInvisible() {
+        if (invulnerabilidadRestante <= 0f) return false;
+        return ((int) (tiempoParpadeo * 20)) % 2 == 0;
     }
 
-    public void sumarPuntos(int cantidad) {
-        if (cantidad > 0) puntos += cantidad;
+    public void recibirDano(float dano) {
+        if (invulnerabilidadRestante > 0f) return;
+        energia = Math.max(0f, energia - dano);
+        invulnerabilidadRestante = ConfiguracionJuego.INVULNERABILIDAD_DURACION;
+        tiempoParpadeo = 0f;
+    }
+
+    public boolean esInvulnerable() {
+        return invulnerabilidadRestante > 0f;
     }
 
     public float getEnergia() { return energia; }
     public float getEnergiaMaxima() { return energiaMaxima; }
-    public float getPorcentajeEnergia() { return energia / energiaMaxima; }
     public boolean estaExtinguido() { return energia <= 0f; }
-    public boolean esInvulnerable() { return tiempoInvulnerable > 0f; }
     public int getPuntos() { return puntos; }
-
-    private void actualizarHitbox() {
-        float mitad = tamano / 2f;
-        hitbox.set(posicion.x - mitad, posicion.y - mitad, tamano, tamano);
+    public float getPorcentajeEnergia() {
+        return energia / energiaMaxima;
     }
-
-    private void actualizarTiempoInvulnerable(float delta) {
-        if (tiempoInvulnerable > 0f) {
-            tiempoInvulnerable = Math.max(0f, tiempoInvulnerable - delta);
-        }
-    }
-
-    private void actualizarPuntosPorSupervivencia(float delta) {
-        tiempoSupervivencia += delta;
-        if (tiempoSupervivencia >= 1f) {
-            tiempoSupervivencia -= 1f;
-            puntos += 1;
-        }
-    }
-
-    private boolean estaParpadeando() {
-        if (!esInvulnerable()) return false;
-        return ((int) (tiempoInvulnerable * PARPADEO_FRECUENCIA)) % 2 == 0;
-    }
-
-    private void consumirEnergiaPorTiempo(float delta) {
-        energia = Math.max(0f, energia - consumoPorSegundo * delta);
-    }
-
-    private void leerInputDireccional() {
-        direccion.setZero();
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) direccion.y += 1;
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) direccion.y -= 1;
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) direccion.x += 1;
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) direccion.x -= 1;
-    }
-
-    private void limitarDentroDelMundo() {
-        float mitad = tamano / 2f;
-        posicion.x = Math.max(mitad, Math.min(posicion.x, ConfiguracionJuego.ANCHO_MUNDO - mitad));
-        posicion.y = Math.max(mitad, Math.min(posicion.y, ConfiguracionJuego.ALTO_MUNDO - mitad));
-    }
-
-    private void actualizarColorSegunEnergia() {
-        float porcentaje = getPorcentajeEnergia();
-        float intensidad = 0.25f + 0.75f * porcentaje;
-        colorActual.set(
-            ConfiguracionJuego.COLOR_LUMEN.r * intensidad,
-            ConfiguracionJuego.COLOR_LUMEN.g * intensidad,
-            ConfiguracionJuego.COLOR_LUMEN.b * intensidad,
-            1f
-        );
-    }
+    public void sumarPuntos(int puntos) { this.puntos += puntos; }
 }

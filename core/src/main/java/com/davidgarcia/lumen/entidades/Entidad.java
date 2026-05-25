@@ -1,5 +1,6 @@
 package com.davidgarcia.lumen.entidades;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -25,5 +26,10 @@ public abstract class Entidad {
 
     public abstract void actualizar(float delta);
 
-    public abstract void dibujar(ShapeRenderer renderer);
+    /**
+     * Dibuja la entidad.
+     * @param batch SpriteBatch para dibujar sprites (debe estar entre begin/end del llamador).
+     * @param shapes ShapeRenderer para dibujar geometría (debe estar entre begin/end del llamador en otra pasada).
+     */
+    public abstract void dibujar(SpriteBatch batch, ShapeRenderer shapes);
 }
