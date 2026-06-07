@@ -16,6 +16,7 @@ import com.davidgarcia.lumen.config.ConfiguracionJuego;
 import com.davidgarcia.lumen.entidades.Entidad;
 import com.davidgarcia.lumen.entidades.Personaje;
 import com.davidgarcia.lumen.entidades.elementos.Brasero;
+import com.davidgarcia.lumen.entidades.elementos.Puerta;
 import com.davidgarcia.lumen.entidades.elementos.Santuario;
 import com.davidgarcia.lumen.entidades.npc.Acechante;
 import com.davidgarcia.lumen.entidades.npc.Devorador;
@@ -111,13 +112,6 @@ public class PantallaJuego extends ScreenAdapter {
             return;
         }
 
-        // Atajo provisional: pulsar N para avanzar a la siguiente sala.
-        if (Gdx.input.isKeyJustPressed(Input.Keys.N)) {
-            entidades = gestorNiveles.avanzarSala();
-            proyectiles.clear();
-            recolocarPersonaje();
-        }
-
         for (Entidad entidad : entidades) {
             entidad.actualizar(delta);
         }
@@ -130,12 +124,48 @@ public class PantallaJuego extends ScreenAdapter {
         recogerRecolectablesEnContacto();
         encenderBraserosEnContacto();
         gestionarInteraccionSantuario();
+        reevaluarPuertas();
+        gestionarAvanceSala();
 
         detectarColisionesPersonajeNPC();
 
         if (personaje.estaExtinguido()) {
             juego.setScreen(new PantallaMenu(juego));
         }
+    }
+
+    private void reevaluarPuertas() {
+        for (Entidad e : entidades) {
+            if (e instanceof Puerta) {
+                ((Puerta) e).reevaluarEstado(entidades, personaje);
+            }
+        }
+    }
+
+    private void gestionarAvanceSala() {
+        for (Entidad e : entidades) {
+            if (!(e instanceof Puerta)) continue;
+            Puerta puerta = (Puerta) e;
+            if (!puerta.estaAbierta()) continue;
+            if (personaje.getHitbox().overlaps(puerta.getHitbox())) {
+                avanzarASiguienteSala();
+                return;
+            }
+        }
+    }
+
+    private void avanzarASiguienteSala() {
+        personaje.sumarPuntos(ConfiguracionJuego.PUNTOS_COMPLETAR_SALA);
+        if (personaje.tieneLlave()) personaje.consumirLlave();
+        List<Entidad> siguientes = gestorNiveles.avanzarSala();
+        if (siguientes == entidades) {
+            // Era la última sala del juego: la pantalla de victoria llega en Fase 5.
+            juego.setScreen(new PantallaMenu(juego));
+            return;
+        }
+        entidades = siguientes;
+        proyectiles.clear();
+        recolocarPersonaje();
     }
 
     private void recogerDisparosDelPersonaje() {
@@ -313,7 +343,8 @@ public class PantallaJuego extends ScreenAdapter {
             proyectil.dibujarForma(shapeRenderer);
         }
         for (Entidad entidad : entidades) {
-            if (entidad instanceof Brasero)        ((Brasero) entidad).dibujarForma(shapeRenderer);
+            if (entidad instanceof Puerta)         ((Puerta) entidad).dibujarForma(shapeRenderer);
+            else if (entidad instanceof Brasero)   ((Brasero) entidad).dibujarForma(shapeRenderer);
             else if (entidad instanceof Santuario) ((Santuario) entidad).dibujarForma(shapeRenderer);
             else if (entidad instanceof Esencia)   ((Esencia) entidad).dibujarForma(shapeRenderer);
             else if (entidad instanceof CristalEnergia) ((CristalEnergia) entidad).dibujarForma(shapeRenderer);

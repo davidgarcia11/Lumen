@@ -57,6 +57,7 @@ public final class ConfiguracionJuego {
     public static final int PUNTOS_ESENCIA = 25;
     public static final int PUNTOS_CRISTAL = 10;
     public static final int PUNTOS_LLAVE = 15;
+    public static final int PUNTOS_COMPLETAR_SALA = 200;
 
     // ─── Recolectables ──────────────────────────────────────────────────────
     /** Energía que restaura un cristal al recogerlo. */
@@ -73,6 +74,12 @@ public final class ConfiguracionJuego {
     public static final float RANGO_INTERACCION = 22f;
     /** Coste en esencias para desbloquear la ráfaga en el santuario. */
     public static final int SANTUARIO_RAFAGA_COSTE = 2;
+
+    // ─── Puerta de salida ───────────────────────────────────────────────────
+    /** Anchura visual y de hitbox de la puerta. */
+    public static final float PUERTA_ANCHO = 18f;
+    /** Altura visual y de hitbox de la puerta. */
+    public static final float PUERTA_ALTO = 28f;
 
     private ConfiguracionJuego() {
         // Clase de constantes; no se instancia.

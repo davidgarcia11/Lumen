@@ -4,6 +4,7 @@ import com.davidgarcia.lumen.config.ConfiguracionJuego;
 import com.davidgarcia.lumen.entidades.Entidad;
 import com.davidgarcia.lumen.entidades.Personaje;
 import com.davidgarcia.lumen.entidades.elementos.Brasero;
+import com.davidgarcia.lumen.entidades.elementos.Puerta;
 import com.davidgarcia.lumen.entidades.elementos.Santuario;
 import com.davidgarcia.lumen.entidades.npc.Acechante;
 import com.davidgarcia.lumen.entidades.npc.Devorador;
@@ -20,8 +21,15 @@ public final class Salas {
 
     private static final float ANCHO = ConfiguracionJuego.ANCHO_MUNDO;
     private static final float ALTO = ConfiguracionJuego.ALTO_MUNDO;
+    /** Posición X estándar de la puerta de salida (junto al borde derecho). */
+    private static final float PUERTA_X = ANCHO - ConfiguracionJuego.PUERTA_ANCHO / 2f;
+    private static final float PUERTA_Y = ALTO * 0.5f;
 
     private Salas() {}
+
+    private static Puerta puertaDeSalida(CondicionApertura condicion) {
+        return new Puerta(PUERTA_X, PUERTA_Y, condicion);
+    }
 
     // ─── Nivel 1: Catacumbas ────────────────────────────────────────────────
 
@@ -34,6 +42,7 @@ public final class Salas {
                 ANCHO * 0.75f, ALTO * 0.5f
             ));
             entidades.add(new Esencia(ANCHO * 0.5f, ALTO * 0.25f));
+            entidades.add(puertaDeSalida(CondicionApertura.siempreAbierta()));
             return entidades;
         });
     }
@@ -53,6 +62,7 @@ public final class Salas {
             ));
             entidades.add(new Brasero(ANCHO * 0.15f, ALTO * 0.65f));
             entidades.add(new Esencia(ANCHO * 0.85f, ALTO * 0.65f));
+            entidades.add(puertaDeSalida(CondicionApertura.braserosEncendidos()));
             return entidades;
         });
     }
@@ -80,6 +90,7 @@ public final class Salas {
                 Santuario.Habilidad.RAFAGA,
                 ConfiguracionJuego.SANTUARIO_RAFAGA_COSTE
             ));
+            entidades.add(puertaDeSalida(CondicionApertura.matarTodos()));
             return entidades;
         });
     }
@@ -101,6 +112,7 @@ public final class Salas {
                 personaje
             ));
             entidades.add(new Llave(ANCHO * 0.5f, ALTO * 0.85f));
+            entidades.add(puertaDeSalida(CondicionApertura.llaveObtenida()));
             return entidades;
         });
     }
@@ -108,37 +120,39 @@ public final class Salas {
     /** N2-S2: sala del Devorador despertando, con Acechante de apoyo. */
     public static Sala n2s2() {
         return new Sala("N2-S2", personaje -> {
-            List<Entidad> enemigos = new ArrayList<>();
-            enemigos.add(new Acechante(
+            List<Entidad> entidades = new ArrayList<>();
+            entidades.add(new Acechante(
                 ANCHO * 0.20f, ALTO * 0.85f,
                 ANCHO * 0.80f, ALTO * 0.85f
             ));
-            enemigos.add(new Devorador(
+            entidades.add(new Devorador(
                 ANCHO * 0.50f, ALTO * 0.55f,
                 personaje
             ));
-            return enemigos;
+            entidades.add(puertaDeSalida(CondicionApertura.matarTodos()));
+            return entidades;
         });
     }
 
     /** N2-S3: sala final con dos Devoradores y un Mirón vigilando. */
     public static Sala n2s3() {
         return new Sala("N2-S3", personaje -> {
-            List<Entidad> enemigos = new ArrayList<>();
-            enemigos.add(new Miron(
+            List<Entidad> entidades = new ArrayList<>();
+            entidades.add(new Miron(
                 ANCHO * 0.50f, ALTO * 0.85f,
                 270f,
                 personaje
             ));
-            enemigos.add(new Devorador(
+            entidades.add(new Devorador(
                 ANCHO * 0.20f, ALTO * 0.60f,
                 personaje
             ));
-            enemigos.add(new Devorador(
+            entidades.add(new Devorador(
                 ANCHO * 0.80f, ALTO * 0.60f,
                 personaje
             ));
-            return enemigos;
+            entidades.add(puertaDeSalida(CondicionApertura.matarTodos()));
+            return entidades;
         });
     }
 }
