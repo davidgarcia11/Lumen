@@ -2,7 +2,6 @@ package com.davidgarcia.lumen.niveles;
 
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
 import com.davidgarcia.lumen.entidades.Entidad;
-import com.davidgarcia.lumen.entidades.Personaje;
 import com.davidgarcia.lumen.entidades.elementos.Brasero;
 import com.davidgarcia.lumen.entidades.elementos.Puerta;
 import com.davidgarcia.lumen.entidades.elementos.Santuario;
@@ -16,7 +15,7 @@ import com.davidgarcia.lumen.entidades.recolectables.Llave;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Factory de salas: define qué enemigos pueblan cada sala del juego. */
+/** Factory de salas: define qué puebla cada sala y la condición para abrir su puerta. */
 public final class Salas {
 
     private static final float ANCHO = ConfiguracionJuego.ANCHO_MUNDO;
@@ -33,63 +32,48 @@ public final class Salas {
 
     // ─── Nivel 1: Catacumbas ────────────────────────────────────────────────
 
-    /** N1-S1: introducción suave, un único Acechante patrullando + esencia tutorial. */
+    /** N1-S1: tutorial puro. Un brasero a tocar, una esencia visible, sin enemigos. */
     public static Sala n1s1() {
         return new Sala("N1-S1", personaje -> {
             List<Entidad> entidades = new ArrayList<>();
-            entidades.add(new Acechante(
-                ANCHO * 0.25f, ALTO * 0.5f,
-                ANCHO * 0.75f, ALTO * 0.5f
-            ));
-            entidades.add(new Esencia(ANCHO * 0.5f, ALTO * 0.25f));
-            entidades.add(puertaDeSalida(CondicionApertura.siempreAbierta()));
-            return entidades;
-        });
-    }
-
-    /** N1-S2: Mirón + brasero a tocar + segunda esencia para llegar a 2 antes del santuario. */
-    public static Sala n1s2() {
-        return new Sala("N1-S2", personaje -> {
-            List<Entidad> entidades = new ArrayList<>();
-            entidades.add(new Acechante(
-                ANCHO * 0.20f, ALTO * 0.30f,
-                ANCHO * 0.80f, ALTO * 0.30f
-            ));
-            entidades.add(new Miron(
-                ANCHO * 0.50f, ALTO * 0.75f,
-                270f,
-                personaje
-            ));
-            entidades.add(new Brasero(ANCHO * 0.15f, ALTO * 0.65f));
-            entidades.add(new Esencia(ANCHO * 0.85f, ALTO * 0.65f));
+            entidades.add(new Brasero(ANCHO * 0.50f, ALTO * 0.60f));
+            entidades.add(new Esencia(ANCHO * 0.25f, ALTO * 0.50f));
             entidades.add(puertaDeSalida(CondicionApertura.braserosEncendidos()));
             return entidades;
         });
     }
 
-    /** N1-S3: sala final de catacumbas con Acechante, Mirón, Devorador + cristal de energía. */
+    /** N1-S2: dos braseros + un acechante patrullando + una segunda esencia. */
+    public static Sala n1s2() {
+        return new Sala("N1-S2", personaje -> {
+            List<Entidad> entidades = new ArrayList<>();
+            entidades.add(new Brasero(ANCHO * 0.20f, ALTO * 0.70f));
+            entidades.add(new Brasero(ANCHO * 0.80f, ALTO * 0.70f));
+            entidades.add(new Acechante(
+                ANCHO * 0.20f, ALTO * 0.30f,
+                ANCHO * 0.80f, ALTO * 0.30f
+            ));
+            entidades.add(new Esencia(ANCHO * 0.50f, ALTO * 0.85f));
+            entidades.add(puertaDeSalida(CondicionApertura.braserosEncendidos()));
+            return entidades;
+        });
+    }
+
+    /** N1-S3: ⭐ santuario que desbloquea la ráfaga + un mirón a derrotar + cristal. */
     public static Sala n1s3() {
         return new Sala("N1-S3", personaje -> {
             List<Entidad> entidades = new ArrayList<>();
-            entidades.add(new Acechante(
-                ANCHO * 0.15f, ALTO * 0.20f,
-                ANCHO * 0.45f, ALTO * 0.20f
-            ));
-            entidades.add(new Miron(
-                ANCHO * 0.80f, ALTO * 0.50f,
-                180f,
-                personaje
-            ));
-            entidades.add(new Devorador(
-                ANCHO * 0.50f, ALTO * 0.85f,
-                personaje
-            ));
-            entidades.add(new CristalEnergia(ANCHO * 0.25f, ALTO * 0.75f));
             entidades.add(new Santuario(
-                ANCHO * 0.50f, ALTO * 0.50f,
+                ANCHO * 0.25f, ALTO * 0.55f,
                 Santuario.Habilidad.RAFAGA,
                 ConfiguracionJuego.SANTUARIO_RAFAGA_COSTE
             ));
+            entidades.add(new Miron(
+                ANCHO * 0.70f, ALTO * 0.55f,
+                180f,
+                personaje
+            ));
+            entidades.add(new CristalEnergia(ANCHO * 0.50f, ALTO * 0.20f));
             entidades.add(puertaDeSalida(CondicionApertura.matarTodos()));
             return entidades;
         });
@@ -97,44 +81,45 @@ public final class Salas {
 
     // ─── Nivel 2: Templo ────────────────────────────────────────────────────
 
-    /** N2-S1: arranque del templo, dos Mirones cruzando visiones + llave provisional. */
+    /** N2-S1: la llave custodiada por dos mirones que se vigilan entre sí + cristal. */
     public static Sala n2s1() {
         return new Sala("N2-S1", personaje -> {
             List<Entidad> entidades = new ArrayList<>();
             entidades.add(new Miron(
-                ANCHO * 0.25f, ALTO * 0.50f,
+                ANCHO * 0.30f, ALTO * 0.55f,
                 0f,
                 personaje
             ));
             entidades.add(new Miron(
-                ANCHO * 0.75f, ALTO * 0.50f,
+                ANCHO * 0.70f, ALTO * 0.55f,
                 180f,
                 personaje
             ));
-            entidades.add(new Llave(ANCHO * 0.5f, ALTO * 0.85f));
+            entidades.add(new Llave(ANCHO * 0.50f, ALTO * 0.85f));
+            entidades.add(new CristalEnergia(ANCHO * 0.15f, ALTO * 0.20f));
             entidades.add(puertaDeSalida(CondicionApertura.llaveObtenida()));
             return entidades;
         });
     }
 
-    /** N2-S2: sala del Devorador despertando, con Acechante de apoyo. */
+    /** N2-S2: tres braseros distribuidos + un devorador dormido en el centro + cristal. */
     public static Sala n2s2() {
         return new Sala("N2-S2", personaje -> {
             List<Entidad> entidades = new ArrayList<>();
-            entidades.add(new Acechante(
-                ANCHO * 0.20f, ALTO * 0.85f,
-                ANCHO * 0.80f, ALTO * 0.85f
-            ));
+            entidades.add(new Brasero(ANCHO * 0.15f, ALTO * 0.80f));
+            entidades.add(new Brasero(ANCHO * 0.50f, ALTO * 0.85f));
+            entidades.add(new Brasero(ANCHO * 0.85f, ALTO * 0.80f));
             entidades.add(new Devorador(
-                ANCHO * 0.50f, ALTO * 0.55f,
+                ANCHO * 0.50f, ALTO * 0.45f,
                 personaje
             ));
-            entidades.add(puertaDeSalida(CondicionApertura.matarTodos()));
+            entidades.add(new CristalEnergia(ANCHO * 0.50f, ALTO * 0.20f));
+            entidades.add(puertaDeSalida(CondicionApertura.braserosEncendidos()));
             return entidades;
         });
     }
 
-    /** N2-S3: sala final con dos Devoradores y un Mirón vigilando. */
+    /** N2-S3: combate final. Un mirón + dos devoradores. Cristal de respiro. */
     public static Sala n2s3() {
         return new Sala("N2-S3", personaje -> {
             List<Entidad> entidades = new ArrayList<>();
@@ -151,6 +136,7 @@ public final class Salas {
                 ANCHO * 0.80f, ALTO * 0.60f,
                 personaje
             ));
+            entidades.add(new CristalEnergia(ANCHO * 0.50f, ALTO * 0.30f));
             entidades.add(puertaDeSalida(CondicionApertura.matarTodos()));
             return entidades;
         });

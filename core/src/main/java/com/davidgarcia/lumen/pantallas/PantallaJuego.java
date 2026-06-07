@@ -160,8 +160,8 @@ public class PantallaJuego extends ScreenAdapter {
         if (personaje.tieneLlave()) personaje.consumirLlave();
         List<Entidad> siguientes = gestorNiveles.avanzarSala();
         if (siguientes == entidades) {
-            // Era la última sala del juego: la pantalla de victoria llega en Fase 5.
-            juego.setScreen(new PantallaMenu(juego));
+            // Era la última sala del juego: salta a la pantalla de victoria.
+            juego.setScreen(new PantallaVictoria(juego, personaje));
             return;
         }
         entidades = siguientes;
