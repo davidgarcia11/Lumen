@@ -24,7 +24,9 @@ public final class GestorAudio {
         HOVER("audio/efectos/hover.ogg"),
         CLICK("audio/efectos/click.ogg"),
         DANO("audio/efectos/dano.ogg"),
-        DESPERTAR("audio/efectos/despertar.ogg");
+        DESPERTAR("audio/efectos/despertar.ogg"),
+        RAFAGA("audio/efectos/rafaga.ogg"),
+        IMPACTO("audio/efectos/impacto.ogg");
 
         final String ruta;
         Efecto(String ruta) { this.ruta = ruta; }

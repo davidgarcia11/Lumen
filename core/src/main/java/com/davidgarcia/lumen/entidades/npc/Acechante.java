@@ -11,7 +11,7 @@ import com.davidgarcia.lumen.utiles.SpritesEnemigos;
 public class Acechante extends NPC {
 
     private static final float VIDA = 20f;
-    private static final float DANO = 25f;
+    private static final float DANO = 15f;
     private static final float VELOCIDAD_PATRULLA = 25f;
     private static final int TAMANO_HITBOX = 10;
     private static final float TAMANO_VISUAL = 18f;

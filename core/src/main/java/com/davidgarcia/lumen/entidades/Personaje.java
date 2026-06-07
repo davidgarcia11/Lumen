@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
+import com.davidgarcia.lumen.entidades.proyectiles.RafagaLuz;
 import com.davidgarcia.lumen.utiles.Animacion;
 import com.davidgarcia.lumen.utiles.SpritesLumen;
 
@@ -23,8 +24,14 @@ public class Personaje extends Entidad {
     private float energia;
     private float invulnerabilidadRestante = 0f;
     private float tiempoParpadeo = 0f;
-    private float acumuladorPuntos = 0f;
     private int puntos = 0;
+
+    private boolean tieneRafaga = false;
+    private float cooldownRafaga = 0f;
+    private RafagaLuz disparoPendiente = null;
+
+    private int esencias = 0;
+    private boolean tieneLlave = false;
 
     private Direccion direccionActual = Direccion.ABAJO;
     private boolean moviendose = false;
@@ -43,7 +50,7 @@ public class Personaje extends Entidad {
         leerEntrada();
         mover(delta);
         consumirEnergia(delta);
-        acumularPuntos(delta);
+        actualizarCooldownRafaga(delta);
         actualizarInvulnerabilidad(delta);
         actualizarAnimaciones(delta);
         actualizarHitbox();
@@ -59,6 +66,10 @@ public class Personaje extends Entidad {
         if (moviendose) {
             direccionMovimiento.nor();
             actualizarDireccionVisual();
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            intentarDisparar();
         }
     }
 
@@ -86,12 +97,35 @@ public class Personaje extends Entidad {
         energia = Math.max(0f, energia - consumoPorSegundo * delta);
     }
 
-    private void acumularPuntos(float delta) {
-        acumuladorPuntos += delta;
-        while (acumuladorPuntos >= 1f) {
-            puntos += 1;
-            acumuladorPuntos -= 1f;
+    private void actualizarCooldownRafaga(float delta) {
+        if (cooldownRafaga > 0f) cooldownRafaga -= delta;
+    }
+
+    private void intentarDisparar() {
+        if (!tieneRafaga) return;
+        if (cooldownRafaga > 0f) return;
+        if (energia <= ConfiguracionJuego.RAFAGA_COSTE_ENERGIA) return;
+        Vector2 dir = direccionDisparoActual();
+        disparoPendiente = new RafagaLuz(posicion.x, posicion.y, dir);
+        energia -= ConfiguracionJuego.RAFAGA_COSTE_ENERGIA;
+        cooldownRafaga = ConfiguracionJuego.RAFAGA_COOLDOWN;
+    }
+
+    private Vector2 direccionDisparoActual() {
+        switch (direccionActual) {
+            case ARRIBA:    return new Vector2(0f, 1f);
+            case IZQUIERDA: return new Vector2(-1f, 0f);
+            case DERECHA:   return new Vector2(1f, 0f);
+            case ABAJO:
+            default:        return new Vector2(0f, -1f);
         }
+    }
+
+    /** Devuelve el disparo generado este frame (o null) y lo limpia. La PantallaJuego lo inserta en su lista. */
+    public RafagaLuz consumirDisparoPendiente() {
+        RafagaLuz d = disparoPendiente;
+        disparoPendiente = null;
+        return d;
     }
 
     private void actualizarInvulnerabilidad(float delta) {
@@ -169,4 +203,39 @@ public class Personaje extends Entidad {
         return energia / energiaMaxima;
     }
     public void sumarPuntos(int puntos) { this.puntos += puntos; }
+
+    public boolean tieneRafaga() { return tieneRafaga; }
+    public void desbloquearRafaga() { tieneRafaga = true; }
+
+    public int getEsencias() { return esencias; }
+    public void sumarEsencia() { esencias++; }
+    public boolean gastarEsencias(int cantidad) {
+        if (esencias < cantidad) return false;
+        esencias -= cantidad;
+        return true;
+    }
+
+    public boolean tieneLlave() { return tieneLlave; }
+    public void recogerLlave() { tieneLlave = true; }
+    public void consumirLlave() { tieneLlave = false; }
+
+    public void recibirEnergia(float cantidad) {
+        if (cantidad <= 0f) return;
+        energia = Math.min(energiaMaxima, energia + cantidad);
+    }
+
+    /**
+     * Restablece el estado del personaje para reintentar el nivel actual:
+     * energía al máximo y consumibles a cero. Conserva los puntos acumulados.
+     */
+    public void reiniciarParaNuevoNivel() {
+        energia = energiaMaxima;
+        invulnerabilidadRestante = 0f;
+        tiempoParpadeo = 0f;
+        cooldownRafaga = 0f;
+        disparoPendiente = null;
+        esencias = 0;
+        tieneLlave = false;
+        tieneRafaga = false;
+    }
 }

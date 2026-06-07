@@ -15,14 +15,24 @@ import com.davidgarcia.lumen.audio.GestorAudio;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
 import com.davidgarcia.lumen.entidades.Entidad;
 import com.davidgarcia.lumen.entidades.Personaje;
+import com.davidgarcia.lumen.entidades.elementos.Brasero;
+import com.davidgarcia.lumen.entidades.elementos.Puerta;
+import com.davidgarcia.lumen.entidades.elementos.Santuario;
 import com.davidgarcia.lumen.entidades.npc.Acechante;
 import com.davidgarcia.lumen.entidades.npc.Devorador;
 import com.davidgarcia.lumen.entidades.npc.Miron;
 import com.davidgarcia.lumen.entidades.npc.NPC;
+import com.davidgarcia.lumen.entidades.proyectiles.RafagaLuz;
+import com.davidgarcia.lumen.entidades.recolectables.CristalEnergia;
+import com.davidgarcia.lumen.entidades.recolectables.Esencia;
+import com.davidgarcia.lumen.entidades.recolectables.Llave;
+import com.davidgarcia.lumen.entidades.recolectables.Recolectable;
+import com.davidgarcia.lumen.niveles.GestorNiveles;
 import com.davidgarcia.lumen.ui.HUD;
 import com.davidgarcia.lumen.ui.MenuPausa;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /** Pantalla principal de juego: orquesta el bucle de simulación de las entidades. */
@@ -36,7 +46,9 @@ public class PantallaJuego extends ScreenAdapter {
     private ShapeRenderer shapeRenderer;
 
     private Personaje personaje;
-    private final List<Entidad> entidades = new ArrayList<>();
+    private GestorNiveles gestorNiveles;
+    private List<Entidad> entidades;
+    private final List<RafagaLuz> proyectiles = new ArrayList<>();
     private HUD hud;
 
     private MenuPausa menuPausa;
@@ -61,33 +73,17 @@ public class PantallaJuego extends ScreenAdapter {
             ConfiguracionJuego.ANCHO_MUNDO / 2f,
             ConfiguracionJuego.ALTO_MUNDO / 2f
         );
-        entidades.add(personaje);
+        gestorNiveles = new GestorNiveles(personaje);
+        entidades = gestorNiveles.cargarSalaInicial();
 
-        entidades.add(new Acechante(
-            ConfiguracionJuego.ANCHO_MUNDO * 0.20f,
-            ConfiguracionJuego.ALTO_MUNDO * 0.25f,
-            ConfiguracionJuego.ANCHO_MUNDO * 0.80f,
-            ConfiguracionJuego.ALTO_MUNDO * 0.25f
-        ));
-
-        entidades.add(new Miron(
-            ConfiguracionJuego.ANCHO_MUNDO * 0.85f,
-            ConfiguracionJuego.ALTO_MUNDO * 0.75f,
-            225f,
-            personaje
-        ));
-
-        entidades.add(new Devorador(
-            ConfiguracionJuego.ANCHO_MUNDO * 0.10f,
-            ConfiguracionJuego.ALTO_MUNDO * 0.80f,
-            personaje
-        ));
-
-        hud = new HUD(personaje);
+        hud = new HUD(personaje, gestorNiveles);
 
         menuPausa = new MenuPausa(new MenuPausa.Acciones() {
             @Override public void onReanudar() {
                 reanudar();
+            }
+            @Override public void onReintentarNivel() {
+                reintentarNivelActual();
             }
             @Override public void onVolverAlMenu() {
                 juego.setScreen(new PantallaMenu(juego));
@@ -123,11 +119,182 @@ public class PantallaJuego extends ScreenAdapter {
             entidad.actualizar(delta);
         }
 
+        recogerDisparosDelPersonaje();
+        actualizarProyectiles(delta);
+        detectarImpactosProyectilNPC();
+        eliminarProyectilesInactivos();
+        eliminarNpcsMuertosYSumarPuntos();
+        recogerRecolectablesEnContacto();
+        encenderBraserosEnContacto();
+        gestionarInteraccionSantuario();
+        reevaluarPuertas();
+        gestionarAvanceSala();
+
         detectarColisionesPersonajeNPC();
 
         if (personaje.estaExtinguido()) {
             juego.setScreen(new PantallaMenu(juego));
         }
+    }
+
+    private void reevaluarPuertas() {
+        for (Entidad e : entidades) {
+            if (e instanceof Puerta) {
+                ((Puerta) e).reevaluarEstado(entidades, personaje);
+            }
+        }
+    }
+
+    private void gestionarAvanceSala() {
+        for (Entidad e : entidades) {
+            if (!(e instanceof Puerta)) continue;
+            Puerta puerta = (Puerta) e;
+            if (!puerta.estaAbierta()) continue;
+            if (personaje.getHitbox().overlaps(puerta.getHitbox())) {
+                avanzarASiguienteSala();
+                return;
+            }
+        }
+    }
+
+    private void avanzarASiguienteSala() {
+        personaje.sumarPuntos(ConfiguracionJuego.PUNTOS_COMPLETAR_SALA);
+        personaje.recibirEnergia(ConfiguracionJuego.BONUS_ENERGIA_COMPLETAR_SALA);
+        if (personaje.tieneLlave()) personaje.consumirLlave();
+        List<Entidad> siguientes = gestorNiveles.avanzarSala();
+        if (siguientes == entidades) {
+            // Era la última sala del juego: salta a la pantalla de victoria.
+            juego.setScreen(new PantallaVictoria(juego, personaje));
+            return;
+        }
+        entidades = siguientes;
+        proyectiles.clear();
+        recolocarPersonaje();
+    }
+
+    private void recogerDisparosDelPersonaje() {
+        RafagaLuz nuevo = personaje.consumirDisparoPendiente();
+        if (nuevo != null) {
+            proyectiles.add(nuevo);
+            GestorAudio.reproducirEfecto(GestorAudio.Efecto.RAFAGA);
+        }
+    }
+
+    private void actualizarProyectiles(float delta) {
+        for (RafagaLuz p : proyectiles) {
+            p.actualizar(delta);
+        }
+    }
+
+    private void detectarImpactosProyectilNPC() {
+        for (RafagaLuz proyectil : proyectiles) {
+            if (!proyectil.estaActivo()) continue;
+            for (Entidad entidad : entidades) {
+                if (!(entidad instanceof NPC)) continue;
+                NPC npc = (NPC) entidad;
+                if (!npc.estaVivo()) continue;
+                if (proyectil.getHitbox().overlaps(npc.getHitbox())) {
+                    npc.recibirDano(proyectil.getDano());
+                    proyectil.desactivar();
+                    GestorAudio.reproducirEfecto(GestorAudio.Efecto.IMPACTO);
+                    break;
+                }
+            }
+        }
+    }
+
+    private void eliminarProyectilesInactivos() {
+        proyectiles.removeIf(p -> !p.estaActivo());
+    }
+
+    private void eliminarNpcsMuertosYSumarPuntos() {
+        Iterator<Entidad> it = entidades.iterator();
+        while (it.hasNext()) {
+            Entidad e = it.next();
+            if (!(e instanceof NPC)) continue;
+            NPC npc = (NPC) e;
+            if (!npc.estaVivo()) {
+                personaje.sumarPuntos(puntosPorTipo(npc));
+                it.remove();
+            }
+        }
+    }
+
+    private int puntosPorTipo(NPC npc) {
+        if (npc instanceof Devorador) return ConfiguracionJuego.PUNTOS_DEVORADOR;
+        if (npc instanceof Miron) return ConfiguracionJuego.PUNTOS_MIRON;
+        if (npc instanceof Acechante) return ConfiguracionJuego.PUNTOS_ACECHANTE;
+        return 0;
+    }
+
+    private void recogerRecolectablesEnContacto() {
+        Iterator<Entidad> it = entidades.iterator();
+        while (it.hasNext()) {
+            Entidad e = it.next();
+            if (!(e instanceof Recolectable)) continue;
+            Recolectable r = (Recolectable) e;
+            if (r.estaRecogido()) continue;
+            if (personaje.getHitbox().overlaps(r.getHitbox())) {
+                r.recoger(personaje);
+                it.remove();
+            }
+        }
+    }
+
+    private void encenderBraserosEnContacto() {
+        for (Entidad e : entidades) {
+            if (!(e instanceof Brasero)) continue;
+            Brasero b = (Brasero) e;
+            if (b.estaEncendido()) continue;
+            if (personaje.getHitbox().overlaps(b.getHitbox())) {
+                b.encender();
+            }
+        }
+    }
+
+    private void gestionarInteraccionSantuario() {
+        if (!Gdx.input.isKeyJustPressed(Input.Keys.E)) return;
+        Santuario objetivo = santuarioAlAlcance();
+        if (objetivo == null) return;
+        boolean activado = objetivo.intentarActivar(personaje);
+        if (activado) {
+            GestorAudio.reproducirEfecto(GestorAudio.Efecto.DESPERTAR);
+        }
+    }
+
+    private void dibujarIndicadorInteraccion(ShapeRenderer shapes) {
+        Santuario s = santuarioAlAlcance();
+        if (s == null || s.estaActivado()) return;
+        // Pequeño punto pulsante encima del santuario para indicar interacción.
+        float yBase = s.getPosicion().y + ConfiguracionJuego.SANTUARIO_TAMANO * 0.7f;
+        shapes.setColor(1f, 1f, 1f, 0.9f);
+        shapes.circle(s.getPosicion().x, yBase, 2.5f);
+    }
+
+    private Santuario santuarioAlAlcance() {
+        float rangoCuadrado = ConfiguracionJuego.RANGO_INTERACCION * ConfiguracionJuego.RANGO_INTERACCION;
+        Santuario mejor = null;
+        float mejorDistCuadrada = Float.MAX_VALUE;
+        for (Entidad e : entidades) {
+            if (!(e instanceof Santuario)) continue;
+            Santuario s = (Santuario) e;
+            float dx = s.getPosicion().x - personaje.getPosicion().x;
+            float dy = s.getPosicion().y - personaje.getPosicion().y;
+            float distCuadrada = dx * dx + dy * dy;
+            if (distCuadrada > rangoCuadrado) continue;
+            if (distCuadrada < mejorDistCuadrada) {
+                mejor = s;
+                mejorDistCuadrada = distCuadrada;
+            }
+        }
+        return mejor;
+    }
+
+    private void recolocarPersonaje() {
+        personaje.getPosicion().set(
+            ConfiguracionJuego.ANCHO_MUNDO / 2f,
+            ConfiguracionJuego.ALTO_MUNDO * 0.15f
+        );
     }
 
     private void pausar() {
@@ -138,6 +305,14 @@ public class PantallaJuego extends ScreenAdapter {
     private void reanudar() {
         pausado = false;
         Gdx.input.setInputProcessor(null);
+    }
+
+    private void reintentarNivelActual() {
+        personaje.reiniciarParaNuevoNivel();
+        entidades = gestorNiveles.reiniciarNivelActual();
+        proyectiles.clear();
+        recolocarPersonaje();
+        reanudar();
     }
 
     private void detectarColisionesPersonajeNPC() {
@@ -156,10 +331,11 @@ public class PantallaJuego extends ScreenAdapter {
     }
 
     private void dibujarMundo() {
+        var colorBase = gestorNiveles.getColorAcentoActual();
         ScreenUtils.clear(
-            ConfiguracionJuego.COLOR_ACENTO_NIVEL_1.r * 0.15f,
-            ConfiguracionJuego.COLOR_ACENTO_NIVEL_1.g * 0.15f,
-            ConfiguracionJuego.COLOR_ACENTO_NIVEL_1.b * 0.15f,
+            colorBase.r * 0.15f,
+            colorBase.g * 0.15f,
+            colorBase.b * 0.15f,
             1f
         );
 
@@ -167,7 +343,6 @@ public class PantallaJuego extends ScreenAdapter {
         batch.setProjectionMatrix(camara.combined);
         shapeRenderer.setProjectionMatrix(camara.combined);
 
-        // Pasada 1: geometría translúcida que va DEBAJO (conos de visión del Mirón).
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
@@ -176,9 +351,20 @@ public class PantallaJuego extends ScreenAdapter {
                 ((Miron) entidad).dibujarConoVision(shapeRenderer);
             }
         }
+        for (RafagaLuz proyectil : proyectiles) {
+            proyectil.dibujarForma(shapeRenderer);
+        }
+        for (Entidad entidad : entidades) {
+            if (entidad instanceof Puerta)         ((Puerta) entidad).dibujarForma(shapeRenderer);
+            else if (entidad instanceof Brasero)   ((Brasero) entidad).dibujarForma(shapeRenderer);
+            else if (entidad instanceof Santuario) ((Santuario) entidad).dibujarForma(shapeRenderer);
+            else if (entidad instanceof Esencia)   ((Esencia) entidad).dibujarForma(shapeRenderer);
+            else if (entidad instanceof CristalEnergia) ((CristalEnergia) entidad).dibujarForma(shapeRenderer);
+            else if (entidad instanceof Llave)     ((Llave) entidad).dibujarForma(shapeRenderer);
+        }
+        dibujarIndicadorInteraccion(shapeRenderer);
         shapeRenderer.end();
 
-        // Pasada 2: sprites de todas las entidades.
         batch.begin();
         for (Entidad entidad : entidades) {
             entidad.dibujar(batch, shapeRenderer);
