@@ -30,7 +30,9 @@ public final class ConfiguracionJuego {
     /** Energía máxima al inicio de un nivel o tras cargar partida. */
     public static final float LUMEN_ENERGIA_MAXIMA = 100f;
     /** Cuánta energía pierde por segundo solo por estar en el mundo (consumo pasivo). */
-    public static final float LUMEN_CONSUMO_POR_SEGUNDO = 1.5f;
+    public static final float LUMEN_CONSUMO_POR_SEGUNDO = 0.8f;
+    /** Energía que se recupera al completar (cruzar la puerta de) una sala. */
+    public static final float BONUS_ENERGIA_COMPLETAR_SALA = 30f;
 
     // ─── Invulnerabilidad ───────────────────────────────────────────────────
     /** Duración (en segundos) de los i-frames tras recibir daño. */

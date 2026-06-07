@@ -156,6 +156,7 @@ public class PantallaJuego extends ScreenAdapter {
 
     private void avanzarASiguienteSala() {
         personaje.sumarPuntos(ConfiguracionJuego.PUNTOS_COMPLETAR_SALA);
+        personaje.recibirEnergia(ConfiguracionJuego.BONUS_ENERGIA_COMPLETAR_SALA);
         if (personaje.tieneLlave()) personaje.consumirLlave();
         List<Entidad> siguientes = gestorNiveles.avanzarSala();
         if (siguientes == entidades) {
