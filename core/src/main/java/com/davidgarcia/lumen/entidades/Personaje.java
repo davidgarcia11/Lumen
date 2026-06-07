@@ -32,6 +32,7 @@ public class Personaje extends Entidad {
 
     private int esencias = 0;
     private boolean tieneLlave = false;
+    private float tiempoJugado = 0f;
 
     private Direccion direccionActual = Direccion.ABAJO;
     private boolean moviendose = false;
@@ -54,6 +55,7 @@ public class Personaje extends Entidad {
         actualizarInvulnerabilidad(delta);
         actualizarAnimaciones(delta);
         actualizarHitbox();
+        tiempoJugado += delta;
     }
 
     private void leerEntrada() {
@@ -218,6 +220,9 @@ public class Personaje extends Entidad {
     public boolean tieneLlave() { return tieneLlave; }
     public void recogerLlave() { tieneLlave = true; }
     public void consumirLlave() { tieneLlave = false; }
+
+    /** Segundos transcurridos en la partida desde la primera sala. */
+    public int getTiempoJugadoSegundos() { return (int) tiempoJugado; }
 
     public void recibirEnergia(float cantidad) {
         if (cantidad <= 0f) return;

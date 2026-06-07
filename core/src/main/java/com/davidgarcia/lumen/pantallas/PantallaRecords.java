@@ -16,10 +16,19 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.davidgarcia.lumen.Main;
 import com.davidgarcia.lumen.audio.GestorAudio;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
+import com.davidgarcia.lumen.datos.GestorRecords;
+import com.davidgarcia.lumen.datos.Puntuacion;
 import com.davidgarcia.lumen.ui.SkinFactory;
 
-/** Pantalla de récords de campeones. Por ahora muestra estado vacío. */
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+/** Pantalla de récords de campeones: muestra el Top 10 persistido. */
 public class PantallaRecords extends ScreenAdapter {
+
+    private static final SimpleDateFormat FORMATO_FECHA = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
 
     private final Main juego;
     private Stage stage;
@@ -41,19 +50,14 @@ public class PantallaRecords extends ScreenAdapter {
         stage.addActor(tabla);
 
         Label titulo = new Label("RÉCORDS DE CAMPEONES", skin, "titulo");
+        tabla.add(titulo).padBottom(50).row();
 
-        String cabecera = String.format("%-6s %-12s %-10s %-10s %-12s %-12s",
-            "POS", "NOMBRE", "PUNTOS", "TIEMPO", "PERSONAJE", "FECHA");
-        Label labelCabecera = new Label(cabecera, skin);
-
-        Label separador = new Label(
-            "----------------------------------------------------------------------",
-            skin);
-
-        Label mensajeVacio = new Label(
-            "\nNadie ha completado el Capítulo I todavía.\n¿Serás el primero?\n",
-            skin, "subtitulo");
-        mensajeVacio.setAlignment(com.badlogic.gdx.utils.Align.center);
+        List<Puntuacion> records = GestorRecords.cargarTodas();
+        if (records.isEmpty()) {
+            anadirMensajeVacio(tabla);
+        } else {
+            anadirTablaRecords(tabla, records);
+        }
 
         TextButton botonVolver = new TextButton("Volver", skin);
         botonVolver.addListener(new InputListener() {
@@ -67,12 +71,48 @@ public class PantallaRecords extends ScreenAdapter {
                 juego.setScreen(new PantallaMenu(juego));
             }
         });
+        tabla.add(botonVolver).width(200).padTop(40);
+    }
 
-        tabla.add(titulo).padBottom(50).row();
-        tabla.add(labelCabecera).padBottom(8).row();
-        tabla.add(separador).padBottom(8).row();
-        tabla.add(mensajeVacio).padBottom(50).row();
-        tabla.add(botonVolver).width(200);
+    private void anadirMensajeVacio(Table tabla) {
+        Label mensaje = new Label(
+            "\nNadie ha completado el Capítulo I todavía.\n¿Serás el primero?\n",
+            skin, "subtitulo");
+        mensaje.setAlignment(com.badlogic.gdx.utils.Align.center);
+        tabla.add(mensaje).padBottom(20).row();
+    }
+
+    private void anadirTablaRecords(Table tabla, List<Puntuacion> records) {
+        String cabecera = String.format("%-5s %-12s %-8s %-8s %-12s",
+            "POS", "NOMBRE", "PUNTOS", "TIEMPO", "FECHA");
+        tabla.add(new Label(cabecera, skin)).padBottom(8).row();
+        tabla.add(new Label(repetir('-', cabecera.length()), skin)).padBottom(8).row();
+
+        for (int i = 0; i < records.size(); i++) {
+            Puntuacion p = records.get(i);
+            String fila = String.format("%-5s %-12s %-8d %-8s %-12s",
+                (i + 1),
+                limitar(p.getNombre(), 12),
+                p.getPuntos(),
+                formatearTiempo(p.getSegundos()),
+                FORMATO_FECHA.format(new Date(p.getFechaMillis())));
+            tabla.add(new Label(fila, skin)).padBottom(4).row();
+        }
+    }
+
+    private static String formatearTiempo(int segundos) {
+        return String.format("%02d:%02d", segundos / 60, segundos % 60);
+    }
+
+    private static String limitar(String s, int max) {
+        if (s == null) return "";
+        return s.length() > max ? s.substring(0, max) : s;
+    }
+
+    private static String repetir(char c, int n) {
+        StringBuilder sb = new StringBuilder(n);
+        for (int i = 0; i < n; i++) sb.append(c);
+        return sb.toString();
     }
 
     @Override
