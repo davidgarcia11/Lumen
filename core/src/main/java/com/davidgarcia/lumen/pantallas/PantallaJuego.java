@@ -27,6 +27,8 @@ import com.davidgarcia.lumen.entidades.recolectables.CristalEnergia;
 import com.davidgarcia.lumen.entidades.recolectables.Esencia;
 import com.davidgarcia.lumen.entidades.recolectables.Llave;
 import com.davidgarcia.lumen.entidades.recolectables.Recolectable;
+import com.davidgarcia.lumen.datos.EstadoPartida;
+import com.davidgarcia.lumen.datos.GestorGuardado;
 import com.davidgarcia.lumen.niveles.GestorNiveles;
 import com.davidgarcia.lumen.ui.HUD;
 import com.davidgarcia.lumen.ui.MenuPausa;
@@ -39,6 +41,7 @@ import java.util.List;
 public class PantallaJuego extends ScreenAdapter {
 
     private final Main juego;
+    private final EstadoPartida estadoARestaurar;
 
     private OrthographicCamera camara;
     private Viewport viewport;
@@ -55,7 +58,13 @@ public class PantallaJuego extends ScreenAdapter {
     private boolean pausado = false;
 
     public PantallaJuego(Main juego) {
+        this(juego, null);
+    }
+
+    /** Reanuda una partida desde el estado guardado proporcionado. */
+    public PantallaJuego(Main juego, EstadoPartida estadoARestaurar) {
         this.juego = juego;
+        this.estadoARestaurar = estadoARestaurar;
     }
 
     @Override
@@ -74,7 +83,22 @@ public class PantallaJuego extends ScreenAdapter {
             ConfiguracionJuego.ALTO_MUNDO / 2f
         );
         gestorNiveles = new GestorNiveles(personaje);
-        entidades = gestorNiveles.cargarSalaInicial();
+
+        if (estadoARestaurar != null) {
+            personaje.aplicarEstadoCargado(
+                estadoARestaurar.getPuntos(),
+                estadoARestaurar.getEsencias(),
+                estadoARestaurar.isTieneRafaga(),
+                estadoARestaurar.getSegundosJugados()
+            );
+            entidades = gestorNiveles.cargarSalaPorIndices(
+                estadoARestaurar.getIndiceNivel(),
+                estadoARestaurar.getIndiceSala()
+            );
+            recolocarPersonaje();
+        } else {
+            entidades = gestorNiveles.cargarSalaInicial();
+        }
 
         hud = new HUD(personaje, gestorNiveles);
 
@@ -164,13 +188,28 @@ public class PantallaJuego extends ScreenAdapter {
         if (personaje.tieneLlave()) personaje.consumirLlave();
         List<Entidad> siguientes = gestorNiveles.avanzarSala();
         if (siguientes == entidades) {
-            // Era la última sala del juego: salta a la pantalla de victoria.
+            // Era la última sala del juego: borra el guardado y salta a la victoria.
+            GestorGuardado.borrar();
             juego.setScreen(new PantallaVictoria(juego, personaje));
             return;
         }
         entidades = siguientes;
         proyectiles.clear();
         recolocarPersonaje();
+        autoguardar();
+    }
+
+    private void autoguardar() {
+        EstadoPartida estado = new EstadoPartida(
+            gestorNiveles.getIndiceNivel(),
+            gestorNiveles.getIndiceSala(),
+            personaje.getPuntos(),
+            personaje.getEsencias(),
+            personaje.tieneRafaga(),
+            personaje.getTiempoJugadoSegundos(),
+            System.currentTimeMillis()
+        );
+        GestorGuardado.guardar(estado);
     }
 
     private void recogerDisparosDelPersonaje() {

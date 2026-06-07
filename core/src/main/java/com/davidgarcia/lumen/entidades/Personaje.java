@@ -230,6 +230,18 @@ public class Personaje extends Entidad {
     }
 
     /**
+     * Restaura el inventario y progreso del personaje al cargar una partida
+     * guardada. La posición y la energía no se restauran: Lumen aparece
+     * en el spawn de la sala cargada con energía completa.
+     */
+    public void aplicarEstadoCargado(int puntos, int esencias, boolean tieneRafaga, int segundosJugados) {
+        this.puntos = puntos;
+        this.esencias = esencias;
+        this.tieneRafaga = tieneRafaga;
+        this.tiempoJugado = segundosJugados;
+    }
+
+    /**
      * Restablece el estado del personaje para reintentar el nivel actual:
      * energía al máximo y consumibles a cero. Conserva los puntos acumulados.
      */
