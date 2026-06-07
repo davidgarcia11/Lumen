@@ -44,6 +44,12 @@ public class GestorNiveles {
         return cargarSalaActual();
     }
 
+    /** Vuelve a la primera sala del nivel actual y devuelve sus entidades frescas. */
+    public List<Entidad> reiniciarNivelActual() {
+        indiceSala = 0;
+        return cargarSalaActual();
+    }
+
     /** Avanza a la siguiente sala. Si era la última del nivel, salta al primer sala del siguiente nivel. */
     public List<Entidad> avanzarSala() {
         Nivel nivelActual = niveles.get(indiceNivel);

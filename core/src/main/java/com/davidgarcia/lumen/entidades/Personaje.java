@@ -223,4 +223,19 @@ public class Personaje extends Entidad {
         if (cantidad <= 0f) return;
         energia = Math.min(energiaMaxima, energia + cantidad);
     }
+
+    /**
+     * Restablece el estado del personaje para reintentar el nivel actual:
+     * energía al máximo y consumibles a cero. Conserva los puntos acumulados.
+     */
+    public void reiniciarParaNuevoNivel() {
+        energia = energiaMaxima;
+        invulnerabilidadRestante = 0f;
+        tiempoParpadeo = 0f;
+        cooldownRafaga = 0f;
+        disparoPendiente = null;
+        esencias = 0;
+        tieneLlave = false;
+        tieneRafaga = false;
+    }
 }

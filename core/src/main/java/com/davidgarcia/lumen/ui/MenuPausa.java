@@ -23,6 +23,7 @@ public class MenuPausa {
 
     public interface Acciones {
         void onReanudar();
+        void onReintentarNivel();
         void onVolverAlMenu();
         void onSalirDelJuego();
     }
@@ -69,6 +70,14 @@ public class MenuPausa {
             }
         });
 
+        TextButton botonReintentar = new TextButton("Reintentar nivel", skin);
+        anadirSonidoUI(botonReintentar);
+        botonReintentar.addListener(new ChangeListener() {
+            @Override public void changed(ChangeEvent event, Actor actor) {
+                acciones.onReintentarNivel();
+            }
+        });
+
         TextButton botonMenu = new TextButton("Menú principal", skin);
         anadirSonidoUI(botonMenu);
         botonMenu.addListener(new ChangeListener() {
@@ -88,6 +97,7 @@ public class MenuPausa {
         tabla.add(titulo).padBottom(40).row();
         tabla.add(botonReanudar).width(300).padBottom(15).row();
         tabla.add(botonSonido).width(300).padBottom(15).row();
+        tabla.add(botonReintentar).width(300).padBottom(15).row();
         tabla.add(botonMenu).width(300).padBottom(15).row();
         tabla.add(botonSalir).width(300).row();
     }

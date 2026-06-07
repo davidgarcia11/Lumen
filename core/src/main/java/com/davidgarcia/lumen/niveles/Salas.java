@@ -54,6 +54,7 @@ public final class Salas {
                 ANCHO * 0.80f, ALTO * 0.30f
             ));
             entidades.add(new Esencia(ANCHO * 0.50f, ALTO * 0.85f));
+            entidades.add(new Esencia(ANCHO * 0.50f, ALTO * 0.15f));
             entidades.add(puertaDeSalida(CondicionApertura.braserosEncendidos()));
             return entidades;
         });

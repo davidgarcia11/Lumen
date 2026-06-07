@@ -82,6 +82,9 @@ public class PantallaJuego extends ScreenAdapter {
             @Override public void onReanudar() {
                 reanudar();
             }
+            @Override public void onReintentarNivel() {
+                reintentarNivelActual();
+            }
             @Override public void onVolverAlMenu() {
                 juego.setScreen(new PantallaMenu(juego));
             }
@@ -302,6 +305,14 @@ public class PantallaJuego extends ScreenAdapter {
     private void reanudar() {
         pausado = false;
         Gdx.input.setInputProcessor(null);
+    }
+
+    private void reintentarNivelActual() {
+        personaje.reiniciarParaNuevoNivel();
+        entidades = gestorNiveles.reiniciarNivelActual();
+        proyectiles.clear();
+        recolocarPersonaje();
+        reanudar();
     }
 
     private void detectarColisionesPersonajeNPC() {
