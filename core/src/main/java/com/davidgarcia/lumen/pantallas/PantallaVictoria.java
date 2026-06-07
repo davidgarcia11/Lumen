@@ -8,18 +8,30 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.davidgarcia.lumen.Main;
 import com.davidgarcia.lumen.audio.GestorAudio;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
+import com.davidgarcia.lumen.datos.GestorRecords;
+import com.davidgarcia.lumen.datos.Puntuacion;
 import com.davidgarcia.lumen.entidades.Personaje;
+import com.davidgarcia.lumen.ui.SkinFactory;
 
 /**
  * Pantalla final del juego: muestra el texto narrativo del Capítulo I con
- * efecto typewriter. Al completarlo, espera a que el jugador pulse una tecla
- * para volver al menú principal.
+ * efecto typewriter. Al completarlo, si la puntuación entra en el Top 10
+ * pide el nombre del jugador; si no, espera a que se pulse una tecla para
+ * volver al menú principal.
  */
 public class PantallaVictoria extends ScreenAdapter {
 
@@ -40,6 +52,8 @@ public class PantallaVictoria extends ScreenAdapter {
 
     private final Main juego;
     private final int puntosFinales;
+    private final int segundosFinales;
+    private final boolean entraEnTop;
 
     private Viewport viewport;
     private OrthographicCamera camara;
@@ -49,6 +63,11 @@ public class PantallaVictoria extends ScreenAdapter {
     private BitmapFont fuentePie;
     private GlyphLayout layout;
 
+    private Stage stageEntradaNombre;
+    private Skin skin;
+    private TextField campoNombre;
+    private boolean recordGuardado = false;
+
     private float tiempo = 0f;
     private int caracteresTotales;
     private boolean completado = false;
@@ -56,6 +75,8 @@ public class PantallaVictoria extends ScreenAdapter {
     public PantallaVictoria(Main juego, Personaje personaje) {
         this.juego = juego;
         this.puntosFinales = personaje.getPuntos();
+        this.segundosFinales = personaje.getTiempoJugadoSegundos();
+        this.entraEnTop = GestorRecords.entraEnTop10(puntosFinales);
     }
 
     @Override
@@ -88,12 +109,10 @@ public class PantallaVictoria extends ScreenAdapter {
         tiempo += delta;
         if (!completado) {
             int visibles = (int) (tiempo * VELOCIDAD_TYPEWRITER);
-            if (visibles >= caracteresTotales) completado = true;
-        }
-
-        if (completado && (Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY) || Gdx.input.justTouched())) {
-            volverAlMenu();
-            return;
+            if (visibles >= caracteresTotales) {
+                completado = true;
+                if (entraEnTop) prepararEntradaNombre();
+            }
         }
 
         camara.update();
@@ -101,19 +120,74 @@ public class PantallaVictoria extends ScreenAdapter {
         batch.begin();
         dibujarContenido();
         batch.end();
+
+        if (stageEntradaNombre != null) {
+            stageEntradaNombre.act(delta);
+            stageEntradaNombre.draw();
+        }
+
+        if (completado && !entraEnTop) {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY) || Gdx.input.justTouched()) {
+                volverAlMenu();
+            }
+        }
+    }
+
+    private void prepararEntradaNombre() {
+        skin = SkinFactory.crearSkinBasica();
+        stageEntradaNombre = new Stage(viewport);
+        Gdx.input.setInputProcessor(stageEntradaNombre);
+
+        Table tabla = new Table();
+        tabla.setFillParent(true);
+        tabla.bottom().padBottom(80);
+        stageEntradaNombre.addActor(tabla);
+
+        Label etiqueta = new Label("¡Has entrado en el Top 10! Introduce tu nombre:", skin);
+
+        campoNombre = new TextField(GestorRecords.getUltimoNombreUsado(), skin);
+        campoNombre.setMaxLength(GestorRecords.MAX_CARACTERES_NOMBRE);
+        campoNombre.setAlignment(com.badlogic.gdx.utils.Align.center);
+        stageEntradaNombre.setKeyboardFocus(campoNombre);
+
+        TextButton botonGuardar = new TextButton("Guardar récord", skin);
+        PantallaMenu.anadirSonidoUI(botonGuardar);
+        botonGuardar.addListener(new ChangeListener() {
+            @Override public void changed(ChangeEvent event, Actor actor) {
+                guardarRecord();
+            }
+        });
+
+        tabla.add(etiqueta).padBottom(15).row();
+        tabla.add(campoNombre).width(260).padBottom(15).row();
+        tabla.add(botonGuardar).width(260);
+    }
+
+    private void guardarRecord() {
+        if (recordGuardado) return;
+        String nombre = campoNombre.getText().trim();
+        if (nombre.isEmpty()) nombre = "Anónimo";
+        Puntuacion puntuacion = new Puntuacion(
+            nombre,
+            puntosFinales,
+            segundosFinales,
+            System.currentTimeMillis()
+        );
+        GestorRecords.registrar(puntuacion);
+        GestorRecords.setUltimoNombreUsado(nombre);
+        recordGuardado = true;
+        volverAlMenu();
     }
 
     private void dibujarContenido() {
         float anchoMundo = viewport.getWorldWidth();
         float altoMundo = viewport.getWorldHeight();
 
-        // Título.
         fuenteTitulo.setColor(ConfiguracionJuego.COLOR_ACENTO_NIVEL_2);
         String titulo = "LA ASCENSIÓN";
         layout.setText(fuenteTitulo, titulo);
         fuenteTitulo.draw(batch, titulo, (anchoMundo - layout.width) / 2f, altoMundo - 80);
 
-        // Texto narrativo con typewriter.
         int restantes = (int) (tiempo * VELOCIDAD_TYPEWRITER);
         if (completado) restantes = caracteresTotales;
 
@@ -134,19 +208,24 @@ public class PantallaVictoria extends ScreenAdapter {
             if (restantes <= 0) break;
         }
 
-        // Pie con puntuación + indicación de continuar.
-        if (completado) {
-            fuentePie.setColor(ConfiguracionJuego.COLOR_ACENTO_NIVEL_2);
-            String puntos = "Puntuación final: " + puntosFinales;
-            layout.setText(fuentePie, puntos);
-            fuentePie.draw(batch, puntos, (anchoMundo - layout.width) / 2f, 140);
+        if (!completado) return;
 
+        fuentePie.setColor(ConfiguracionJuego.COLOR_ACENTO_NIVEL_2);
+        String puntos = "Puntuación final: " + puntosFinales + "   Tiempo: " + formatearTiempo(segundosFinales);
+        layout.setText(fuentePie, puntos);
+        fuentePie.draw(batch, puntos, (anchoMundo - layout.width) / 2f, 220);
+
+        if (!entraEnTop) {
             float parpadeo = (float) Math.sin(tiempo * 4f);
             fuentePie.setColor(1f, 1f, 1f, 0.55f + 0.45f * (parpadeo * 0.5f + 0.5f));
             String pie = "Pulsa cualquier tecla para volver al menú";
             layout.setText(fuentePie, pie);
             fuentePie.draw(batch, pie, (anchoMundo - layout.width) / 2f, 80);
         }
+    }
+
+    private String formatearTiempo(int segundos) {
+        return String.format("%02d:%02d", segundos / 60, segundos % 60);
     }
 
     private void volverAlMenu() {
@@ -156,6 +235,7 @@ public class PantallaVictoria extends ScreenAdapter {
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
+        if (stageEntradaNombre != null) stageEntradaNombre.getViewport().update(width, height, true);
     }
 
     @Override
@@ -169,5 +249,7 @@ public class PantallaVictoria extends ScreenAdapter {
         if (fuenteTitulo != null) fuenteTitulo.dispose();
         if (fuenteTexto != null) fuenteTexto.dispose();
         if (fuentePie != null) fuentePie.dispose();
+        if (stageEntradaNombre != null) stageEntradaNombre.dispose();
+        if (skin != null) skin.dispose();
     }
 }

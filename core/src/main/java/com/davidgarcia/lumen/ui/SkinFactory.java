@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
 
 /** Construye la skin básica del juego para reutilizar entre pantallas. */
@@ -36,6 +37,14 @@ public final class SkinFactory {
         skin.add("default", estiloBoton);
 
         skin.add("pixel-blanco", crearTextureRegionBlanca());
+
+        TextField.TextFieldStyle estiloTextField = new TextField.TextFieldStyle();
+        estiloTextField.font = fuente;
+        estiloTextField.fontColor = Color.WHITE;
+        estiloTextField.cursor = skin.newDrawable("pixel-blanco", ConfiguracionJuego.COLOR_LUMEN);
+        estiloTextField.selection = skin.newDrawable("pixel-blanco", new Color(0.4f, 0.6f, 0.9f, 0.5f));
+        estiloTextField.background = skin.newDrawable("pixel-blanco", new Color(0.10f, 0.10f, 0.15f, 0.85f));
+        skin.add("default", estiloTextField);
 
         return skin;
     }
