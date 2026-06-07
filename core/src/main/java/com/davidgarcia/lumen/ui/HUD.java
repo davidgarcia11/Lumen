@@ -3,8 +3,10 @@ package com.davidgarcia.lumen.ui;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
@@ -29,9 +31,15 @@ public class HUD {
     private final SpriteBatch batch;
     private final ShapeRenderer shapes;
     private final BitmapFont fuente;
+    private final GlyphLayout layout = new GlyphLayout();
 
     private final Personaje personaje;
     private final GestorNiveles gestorNiveles;
+
+    private String mensajeTemporal = null;
+    private long mensajeExpiraEnMillis = 0L;
+    private float mensajeDuracionTotal = 0f;
+    private String pieInteraccion = null;
 
     public HUD(Personaje personaje, GestorNiveles gestorNiveles) {
         this.personaje = personaje;
@@ -51,6 +59,19 @@ public class HUD {
 
         dibujarBarraEnergia();
         dibujarTextos();
+    }
+
+    /** Muestra un texto en el centro inferior durante los segundos indicados, con fade out final. */
+    public void mostrarMensaje(String texto, float segundos) {
+        if (texto == null || texto.isEmpty()) return;
+        mensajeTemporal = texto;
+        mensajeDuracionTotal = segundos;
+        mensajeExpiraEnMillis = TimeUtils.millis() + (long) (segundos * 1000f);
+    }
+
+    /** Establece (o limpia con null) el texto fijo de interacción inferior, p.ej. "[E] Activar". */
+    public void setPieInteraccion(String texto) {
+        this.pieInteraccion = (texto == null || texto.isEmpty()) ? null : texto;
     }
 
     public void resize(int width, int height) {
@@ -108,7 +129,41 @@ public class HUD {
             fuente.setColor(Color.WHITE);
         }
 
+        dibujarPieInteraccion();
+        dibujarMensajeTemporal();
+
         batch.end();
+    }
+
+    private void dibujarPieInteraccion() {
+        if (pieInteraccion == null) return;
+        fuente.setColor(ConfiguracionJuego.COLOR_LUMEN);
+        layout.setText(fuente, pieInteraccion);
+        float x = (viewport.getWorldWidth() - layout.width) / 2f;
+        float y = MARGEN + layout.height + 4f;
+        fuente.draw(batch, pieInteraccion, x, y);
+        fuente.setColor(Color.WHITE);
+    }
+
+    private void dibujarMensajeTemporal() {
+        if (mensajeTemporal == null) return;
+        long ahora = TimeUtils.millis();
+        if (ahora >= mensajeExpiraEnMillis) {
+            mensajeTemporal = null;
+            return;
+        }
+        // Fade out durante el último 35% de la vida del mensaje.
+        long restanteMillis = mensajeExpiraEnMillis - ahora;
+        float restanteSegundos = restanteMillis / 1000f;
+        float umbralFade = mensajeDuracionTotal * 0.35f;
+        float alpha = restanteSegundos >= umbralFade ? 1f : restanteSegundos / umbralFade;
+
+        fuente.setColor(1f, 1f, 1f, alpha);
+        layout.setText(fuente, mensajeTemporal);
+        float x = (viewport.getWorldWidth() - layout.width) / 2f;
+        float y = viewport.getWorldHeight() * 0.30f;
+        fuente.draw(batch, mensajeTemporal, x, y);
+        fuente.setColor(Color.WHITE);
     }
 
     private String etiquetaActual() {

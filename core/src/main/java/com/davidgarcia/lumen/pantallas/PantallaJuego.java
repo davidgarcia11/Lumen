@@ -126,6 +126,7 @@ public class PantallaJuego extends ScreenAdapter {
         eliminarNpcsMuertosYSumarPuntos();
         recogerRecolectablesEnContacto();
         encenderBraserosEnContacto();
+        actualizarPieInteraccion();
         gestionarInteraccionSantuario();
         reevaluarPuertas();
         gestionarAvanceSala();
@@ -255,20 +256,28 @@ public class PantallaJuego extends ScreenAdapter {
     private void gestionarInteraccionSantuario() {
         if (!Gdx.input.isKeyJustPressed(Input.Keys.E)) return;
         Santuario objetivo = santuarioAlAlcance();
-        if (objetivo == null) return;
+        if (objetivo == null || objetivo.estaActivado()) return;
+
+        int faltan = objetivo.getCosteEsencias() - personaje.getEsencias();
+        if (faltan > 0) {
+            hud.mostrarMensaje("Faltan " + faltan + " esencia" + (faltan == 1 ? "" : "s"), 2f);
+            return;
+        }
+
         boolean activado = objetivo.intentarActivar(personaje);
         if (activado) {
             GestorAudio.reproducirEfecto(GestorAudio.Efecto.DESPERTAR);
+            hud.mostrarMensaje("Recuerdas… cómo proyectabas tu luz hacia delante.", 3.5f);
         }
     }
 
-    private void dibujarIndicadorInteraccion(ShapeRenderer shapes) {
+    private void actualizarPieInteraccion() {
         Santuario s = santuarioAlAlcance();
-        if (s == null || s.estaActivado()) return;
-        // Pequeño punto pulsante encima del santuario para indicar interacción.
-        float yBase = s.getPosicion().y + ConfiguracionJuego.SANTUARIO_TAMANO * 0.7f;
-        shapes.setColor(1f, 1f, 1f, 0.9f);
-        shapes.circle(s.getPosicion().x, yBase, 2.5f);
+        if (s != null && !s.estaActivado()) {
+            hud.setPieInteraccion("[E]  Activar santuario");
+        } else {
+            hud.setPieInteraccion(null);
+        }
     }
 
     private Santuario santuarioAlAlcance() {
@@ -362,7 +371,6 @@ public class PantallaJuego extends ScreenAdapter {
             else if (entidad instanceof CristalEnergia) ((CristalEnergia) entidad).dibujarForma(shapeRenderer);
             else if (entidad instanceof Llave)     ((Llave) entidad).dibujarForma(shapeRenderer);
         }
-        dibujarIndicadorInteraccion(shapeRenderer);
         shapeRenderer.end();
 
         batch.begin();
