@@ -6,6 +6,9 @@ import com.davidgarcia.lumen.entidades.Personaje;
 import com.davidgarcia.lumen.entidades.npc.Acechante;
 import com.davidgarcia.lumen.entidades.npc.Devorador;
 import com.davidgarcia.lumen.entidades.npc.Miron;
+import com.davidgarcia.lumen.entidades.recolectables.CristalEnergia;
+import com.davidgarcia.lumen.entidades.recolectables.Esencia;
+import com.davidgarcia.lumen.entidades.recolectables.Llave;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,15 +23,16 @@ public final class Salas {
 
     // ─── Nivel 1: Catacumbas ────────────────────────────────────────────────
 
-    /** N1-S1: introducción suave, un único Acechante patrullando. */
+    /** N1-S1: introducción suave, un único Acechante patrullando + esencia tutorial. */
     public static Sala n1s1() {
         return new Sala("N1-S1", personaje -> {
-            List<Entidad> enemigos = new ArrayList<>();
-            enemigos.add(new Acechante(
+            List<Entidad> entidades = new ArrayList<>();
+            entidades.add(new Acechante(
                 ANCHO * 0.25f, ALTO * 0.5f,
                 ANCHO * 0.75f, ALTO * 0.5f
             ));
-            return enemigos;
+            entidades.add(new Esencia(ANCHO * 0.5f, ALTO * 0.25f));
+            return entidades;
         });
     }
 
@@ -49,44 +53,46 @@ public final class Salas {
         });
     }
 
-    /** N1-S3: sala final de catacumbas con Acechante, Mirón y primer Devorador. */
+    /** N1-S3: sala final de catacumbas con Acechante, Mirón, Devorador + cristal de energía. */
     public static Sala n1s3() {
         return new Sala("N1-S3", personaje -> {
-            List<Entidad> enemigos = new ArrayList<>();
-            enemigos.add(new Acechante(
+            List<Entidad> entidades = new ArrayList<>();
+            entidades.add(new Acechante(
                 ANCHO * 0.15f, ALTO * 0.20f,
                 ANCHO * 0.45f, ALTO * 0.20f
             ));
-            enemigos.add(new Miron(
+            entidades.add(new Miron(
                 ANCHO * 0.80f, ALTO * 0.50f,
                 180f,
                 personaje
             ));
-            enemigos.add(new Devorador(
+            entidades.add(new Devorador(
                 ANCHO * 0.50f, ALTO * 0.85f,
                 personaje
             ));
-            return enemigos;
+            entidades.add(new CristalEnergia(ANCHO * 0.25f, ALTO * 0.75f));
+            return entidades;
         });
     }
 
     // ─── Nivel 2: Templo ────────────────────────────────────────────────────
 
-    /** N2-S1: arranque del templo, dos Mirones cruzando visiones. */
+    /** N2-S1: arranque del templo, dos Mirones cruzando visiones + llave provisional. */
     public static Sala n2s1() {
         return new Sala("N2-S1", personaje -> {
-            List<Entidad> enemigos = new ArrayList<>();
-            enemigos.add(new Miron(
+            List<Entidad> entidades = new ArrayList<>();
+            entidades.add(new Miron(
                 ANCHO * 0.25f, ALTO * 0.50f,
                 0f,
                 personaje
             ));
-            enemigos.add(new Miron(
+            entidades.add(new Miron(
                 ANCHO * 0.75f, ALTO * 0.50f,
                 180f,
                 personaje
             ));
-            return enemigos;
+            entidades.add(new Llave(ANCHO * 0.5f, ALTO * 0.15f));
+            return entidades;
         });
     }
 

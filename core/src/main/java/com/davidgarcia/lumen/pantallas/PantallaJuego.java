@@ -20,6 +20,10 @@ import com.davidgarcia.lumen.entidades.npc.Devorador;
 import com.davidgarcia.lumen.entidades.npc.Miron;
 import com.davidgarcia.lumen.entidades.npc.NPC;
 import com.davidgarcia.lumen.entidades.proyectiles.RafagaLuz;
+import com.davidgarcia.lumen.entidades.recolectables.CristalEnergia;
+import com.davidgarcia.lumen.entidades.recolectables.Esencia;
+import com.davidgarcia.lumen.entidades.recolectables.Llave;
+import com.davidgarcia.lumen.entidades.recolectables.Recolectable;
 import com.davidgarcia.lumen.niveles.GestorNiveles;
 import com.davidgarcia.lumen.ui.HUD;
 import com.davidgarcia.lumen.ui.MenuPausa;
@@ -121,6 +125,7 @@ public class PantallaJuego extends ScreenAdapter {
         detectarImpactosProyectilNPC();
         eliminarProyectilesInactivos();
         eliminarNpcsMuertosYSumarPuntos();
+        recogerRecolectablesEnContacto();
 
         detectarColisionesPersonajeNPC();
 
@@ -184,6 +189,20 @@ public class PantallaJuego extends ScreenAdapter {
         return 0;
     }
 
+    private void recogerRecolectablesEnContacto() {
+        Iterator<Entidad> it = entidades.iterator();
+        while (it.hasNext()) {
+            Entidad e = it.next();
+            if (!(e instanceof Recolectable)) continue;
+            Recolectable r = (Recolectable) e;
+            if (r.estaRecogido()) continue;
+            if (personaje.getHitbox().overlaps(r.getHitbox())) {
+                r.recoger(personaje);
+                it.remove();
+            }
+        }
+    }
+
     private void recolocarPersonaje() {
         personaje.getPosicion().set(
             ConfiguracionJuego.ANCHO_MUNDO / 2f,
@@ -239,6 +258,11 @@ public class PantallaJuego extends ScreenAdapter {
         }
         for (RafagaLuz proyectil : proyectiles) {
             proyectil.dibujarForma(shapeRenderer);
+        }
+        for (Entidad entidad : entidades) {
+            if (entidad instanceof Esencia)        ((Esencia) entidad).dibujarForma(shapeRenderer);
+            else if (entidad instanceof CristalEnergia) ((CristalEnergia) entidad).dibujarForma(shapeRenderer);
+            else if (entidad instanceof Llave)     ((Llave) entidad).dibujarForma(shapeRenderer);
         }
         shapeRenderer.end();
 

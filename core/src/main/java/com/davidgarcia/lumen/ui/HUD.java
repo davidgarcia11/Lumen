@@ -96,10 +96,17 @@ public class HUD {
         fuente.setColor(Color.WHITE);
         fuente.draw(batch, etiquetaActual(), MARGEN, yBarra - 8);
 
-        String textoPuntos = "Puntos: " + personaje.getPuntos();
-        float xPuntos = viewport.getWorldWidth() - MARGEN - ANCHO_CONTADOR_PUNTOS;
+        float xDerecha = viewport.getWorldWidth() - MARGEN - ANCHO_CONTADOR_PUNTOS;
         float yPuntos = viewport.getWorldHeight() - MARGEN;
-        fuente.draw(batch, textoPuntos, xPuntos, yPuntos);
+        float altoLinea = fuente.getLineHeight();
+
+        fuente.draw(batch, "Puntos: " + personaje.getPuntos(), xDerecha, yPuntos);
+        fuente.draw(batch, "Esencias: " + personaje.getEsencias(), xDerecha, yPuntos - altoLinea);
+        if (personaje.tieneLlave()) {
+            fuente.setColor(1f, 0.85f, 0.3f, 1f);
+            fuente.draw(batch, "Llave obtenida", xDerecha, yPuntos - altoLinea * 2);
+            fuente.setColor(Color.WHITE);
+        }
 
         batch.end();
     }

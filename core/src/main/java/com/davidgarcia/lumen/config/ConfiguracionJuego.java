@@ -54,6 +54,15 @@ public final class ConfiguracionJuego {
     public static final int PUNTOS_ACECHANTE = 20;
     public static final int PUNTOS_MIRON = 40;
     public static final int PUNTOS_DEVORADOR = 80;
+    public static final int PUNTOS_ESENCIA = 25;
+    public static final int PUNTOS_CRISTAL = 10;
+    public static final int PUNTOS_LLAVE = 15;
+
+    // ─── Recolectables ──────────────────────────────────────────────────────
+    /** Energía que restaura un cristal al recogerlo. */
+    public static final float CRISTAL_ENERGIA_RESTAURADA = 25f;
+    /** Tamaño visual y de hitbox de los recolectables, en unidades del mundo. */
+    public static final float RECOLECTABLE_TAMANO = 10f;
 
     private ConfiguracionJuego() {
         // Clase de constantes; no se instancia.

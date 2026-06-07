@@ -30,6 +30,9 @@ public class Personaje extends Entidad {
     private float cooldownRafaga = 0f;
     private RafagaLuz disparoPendiente = null;
 
+    private int esencias = 0;
+    private boolean tieneLlave = false;
+
     private Direccion direccionActual = Direccion.ABAJO;
     private boolean moviendose = false;
 
@@ -207,4 +210,21 @@ public class Personaje extends Entidad {
 
     public boolean tieneRafaga() { return tieneRafaga; }
     public void desbloquearRafaga() { tieneRafaga = true; }
+
+    public int getEsencias() { return esencias; }
+    public void sumarEsencia() { esencias++; }
+    public boolean gastarEsencias(int cantidad) {
+        if (esencias < cantidad) return false;
+        esencias -= cantidad;
+        return true;
+    }
+
+    public boolean tieneLlave() { return tieneLlave; }
+    public void recogerLlave() { tieneLlave = true; }
+    public void consumirLlave() { tieneLlave = false; }
+
+    public void recibirEnergia(float cantidad) {
+        if (cantidad <= 0f) return;
+        energia = Math.min(energiaMaxima, energia + cantidad);
+    }
 }
