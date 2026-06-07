@@ -19,10 +19,13 @@ import com.davidgarcia.lumen.entidades.npc.Acechante;
 import com.davidgarcia.lumen.entidades.npc.Devorador;
 import com.davidgarcia.lumen.entidades.npc.Miron;
 import com.davidgarcia.lumen.entidades.npc.NPC;
+import com.davidgarcia.lumen.entidades.proyectiles.RafagaLuz;
+import com.davidgarcia.lumen.niveles.GestorNiveles;
 import com.davidgarcia.lumen.ui.HUD;
 import com.davidgarcia.lumen.ui.MenuPausa;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /** Pantalla principal de juego: orquesta el bucle de simulación de las entidades. */
@@ -36,7 +39,9 @@ public class PantallaJuego extends ScreenAdapter {
     private ShapeRenderer shapeRenderer;
 
     private Personaje personaje;
-    private final List<Entidad> entidades = new ArrayList<>();
+    private GestorNiveles gestorNiveles;
+    private List<Entidad> entidades;
+    private final List<RafagaLuz> proyectiles = new ArrayList<>();
     private HUD hud;
 
     private MenuPausa menuPausa;
@@ -61,29 +66,10 @@ public class PantallaJuego extends ScreenAdapter {
             ConfiguracionJuego.ANCHO_MUNDO / 2f,
             ConfiguracionJuego.ALTO_MUNDO / 2f
         );
-        entidades.add(personaje);
+        gestorNiveles = new GestorNiveles(personaje);
+        entidades = gestorNiveles.cargarSalaInicial();
 
-        entidades.add(new Acechante(
-            ConfiguracionJuego.ANCHO_MUNDO * 0.20f,
-            ConfiguracionJuego.ALTO_MUNDO * 0.25f,
-            ConfiguracionJuego.ANCHO_MUNDO * 0.80f,
-            ConfiguracionJuego.ALTO_MUNDO * 0.25f
-        ));
-
-        entidades.add(new Miron(
-            ConfiguracionJuego.ANCHO_MUNDO * 0.85f,
-            ConfiguracionJuego.ALTO_MUNDO * 0.75f,
-            225f,
-            personaje
-        ));
-
-        entidades.add(new Devorador(
-            ConfiguracionJuego.ANCHO_MUNDO * 0.10f,
-            ConfiguracionJuego.ALTO_MUNDO * 0.80f,
-            personaje
-        ));
-
-        hud = new HUD(personaje);
+        hud = new HUD(personaje, gestorNiveles);
 
         menuPausa = new MenuPausa(new MenuPausa.Acciones() {
             @Override public void onReanudar() {
@@ -119,15 +105,90 @@ public class PantallaJuego extends ScreenAdapter {
             return;
         }
 
+        // Atajo provisional: pulsar N para avanzar a la siguiente sala.
+        if (Gdx.input.isKeyJustPressed(Input.Keys.N)) {
+            entidades = gestorNiveles.avanzarSala();
+            proyectiles.clear();
+            recolocarPersonaje();
+        }
+
         for (Entidad entidad : entidades) {
             entidad.actualizar(delta);
         }
+
+        recogerDisparosDelPersonaje();
+        actualizarProyectiles(delta);
+        detectarImpactosProyectilNPC();
+        eliminarProyectilesInactivos();
+        eliminarNpcsMuertosYSumarPuntos();
 
         detectarColisionesPersonajeNPC();
 
         if (personaje.estaExtinguido()) {
             juego.setScreen(new PantallaMenu(juego));
         }
+    }
+
+    private void recogerDisparosDelPersonaje() {
+        RafagaLuz nuevo = personaje.consumirDisparoPendiente();
+        if (nuevo != null) {
+            proyectiles.add(nuevo);
+            GestorAudio.reproducirEfecto(GestorAudio.Efecto.RAFAGA);
+        }
+    }
+
+    private void actualizarProyectiles(float delta) {
+        for (RafagaLuz p : proyectiles) {
+            p.actualizar(delta);
+        }
+    }
+
+    private void detectarImpactosProyectilNPC() {
+        for (RafagaLuz proyectil : proyectiles) {
+            if (!proyectil.estaActivo()) continue;
+            for (Entidad entidad : entidades) {
+                if (!(entidad instanceof NPC)) continue;
+                NPC npc = (NPC) entidad;
+                if (!npc.estaVivo()) continue;
+                if (proyectil.getHitbox().overlaps(npc.getHitbox())) {
+                    npc.recibirDano(proyectil.getDano());
+                    proyectil.desactivar();
+                    GestorAudio.reproducirEfecto(GestorAudio.Efecto.IMPACTO);
+                    break;
+                }
+            }
+        }
+    }
+
+    private void eliminarProyectilesInactivos() {
+        proyectiles.removeIf(p -> !p.estaActivo());
+    }
+
+    private void eliminarNpcsMuertosYSumarPuntos() {
+        Iterator<Entidad> it = entidades.iterator();
+        while (it.hasNext()) {
+            Entidad e = it.next();
+            if (!(e instanceof NPC)) continue;
+            NPC npc = (NPC) e;
+            if (!npc.estaVivo()) {
+                personaje.sumarPuntos(puntosPorTipo(npc));
+                it.remove();
+            }
+        }
+    }
+
+    private int puntosPorTipo(NPC npc) {
+        if (npc instanceof Devorador) return ConfiguracionJuego.PUNTOS_DEVORADOR;
+        if (npc instanceof Miron) return ConfiguracionJuego.PUNTOS_MIRON;
+        if (npc instanceof Acechante) return ConfiguracionJuego.PUNTOS_ACECHANTE;
+        return 0;
+    }
+
+    private void recolocarPersonaje() {
+        personaje.getPosicion().set(
+            ConfiguracionJuego.ANCHO_MUNDO / 2f,
+            ConfiguracionJuego.ALTO_MUNDO * 0.15f
+        );
     }
 
     private void pausar() {
@@ -156,10 +217,11 @@ public class PantallaJuego extends ScreenAdapter {
     }
 
     private void dibujarMundo() {
+        var colorBase = gestorNiveles.getColorAcentoActual();
         ScreenUtils.clear(
-            ConfiguracionJuego.COLOR_ACENTO_NIVEL_1.r * 0.15f,
-            ConfiguracionJuego.COLOR_ACENTO_NIVEL_1.g * 0.15f,
-            ConfiguracionJuego.COLOR_ACENTO_NIVEL_1.b * 0.15f,
+            colorBase.r * 0.15f,
+            colorBase.g * 0.15f,
+            colorBase.b * 0.15f,
             1f
         );
 
@@ -167,7 +229,6 @@ public class PantallaJuego extends ScreenAdapter {
         batch.setProjectionMatrix(camara.combined);
         shapeRenderer.setProjectionMatrix(camara.combined);
 
-        // Pasada 1: geometría translúcida que va DEBAJO (conos de visión del Mirón).
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
@@ -176,9 +237,11 @@ public class PantallaJuego extends ScreenAdapter {
                 ((Miron) entidad).dibujarConoVision(shapeRenderer);
             }
         }
+        for (RafagaLuz proyectil : proyectiles) {
+            proyectil.dibujarForma(shapeRenderer);
+        }
         shapeRenderer.end();
 
-        // Pasada 2: sprites de todas las entidades.
         batch.begin();
         for (Entidad entidad : entidades) {
             entidad.dibujar(batch, shapeRenderer);

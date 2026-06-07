@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
 import com.davidgarcia.lumen.entidades.Personaje;
+import com.davidgarcia.lumen.niveles.GestorNiveles;
 
 /** HUD del juego: barra de energía, puntos, nivel/sala actuales. */
 public class HUD {
@@ -30,10 +31,11 @@ public class HUD {
     private final BitmapFont fuente;
 
     private final Personaje personaje;
-    private String etiquetaNivelSala = "N1-S1";
+    private final GestorNiveles gestorNiveles;
 
-    public HUD(Personaje personaje) {
+    public HUD(Personaje personaje, GestorNiveles gestorNiveles) {
         this.personaje = personaje;
+        this.gestorNiveles = gestorNiveles;
         this.camara = new OrthographicCamera();
         this.viewport = new ScreenViewport(camara);
         this.batch = new SpriteBatch();
@@ -59,10 +61,6 @@ public class HUD {
         batch.dispose();
         shapes.dispose();
         fuente.dispose();
-    }
-
-    public void setEtiquetaNivelSala(String etiqueta) {
-        this.etiquetaNivelSala = etiqueta;
     }
 
     private void dibujarBarraEnergia() {
@@ -96,7 +94,7 @@ public class HUD {
         float yBarra = viewport.getWorldHeight() - MARGEN - CRISTAL_ALTO;
 
         fuente.setColor(Color.WHITE);
-        fuente.draw(batch, etiquetaNivelSala, MARGEN, yBarra - 8);
+        fuente.draw(batch, etiquetaActual(), MARGEN, yBarra - 8);
 
         String textoPuntos = "Puntos: " + personaje.getPuntos();
         float xPuntos = viewport.getWorldWidth() - MARGEN - ANCHO_CONTADOR_PUNTOS;
@@ -104,5 +102,10 @@ public class HUD {
         fuente.draw(batch, textoPuntos, xPuntos, yPuntos);
 
         batch.end();
+    }
+
+    private String etiquetaActual() {
+        return gestorNiveles.getSalaActual().getIdentificador()
+            + "  " + gestorNiveles.getNivelActual().getNombre();
     }
 }

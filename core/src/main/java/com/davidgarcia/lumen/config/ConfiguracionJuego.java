@@ -36,6 +36,25 @@ public final class ConfiguracionJuego {
     /** Duración (en segundos) de los i-frames tras recibir daño. */
     public static final float INVULNERABILIDAD_DURACION = 0.5f;
 
+    // ─── Ráfaga de luz ──────────────────────────────────────────────────────
+    /** Velocidad de avance del proyectil de ráfaga. */
+    public static final float RAFAGA_VELOCIDAD = 180f;
+    /** Distancia máxima que recorre la ráfaga antes de desaparecer. */
+    public static final float RAFAGA_ALCANCE = 90f;
+    /** Daño que inflige una ráfaga al impactar el cuerpo de un NPC. */
+    public static final float RAFAGA_DANO = 12f;
+    /** Tiempo (segundos) entre disparos consecutivos. */
+    public static final float RAFAGA_COOLDOWN = 0.35f;
+    /** Energía consumida al disparar una ráfaga. */
+    public static final float RAFAGA_COSTE_ENERGIA = 4f;
+    /** Tamaño visual del proyectil. */
+    public static final float RAFAGA_TAMANO = 8f;
+
+    // ─── Puntuación ─────────────────────────────────────────────────────────
+    public static final int PUNTOS_ACECHANTE = 20;
+    public static final int PUNTOS_MIRON = 40;
+    public static final int PUNTOS_DEVORADOR = 80;
+
     private ConfiguracionJuego() {
         // Clase de constantes; no se instancia.
     }

@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
+import com.davidgarcia.lumen.entidades.proyectiles.RafagaLuz;
 import com.davidgarcia.lumen.utiles.Animacion;
 import com.davidgarcia.lumen.utiles.SpritesLumen;
 
@@ -23,8 +24,11 @@ public class Personaje extends Entidad {
     private float energia;
     private float invulnerabilidadRestante = 0f;
     private float tiempoParpadeo = 0f;
-    private float acumuladorPuntos = 0f;
     private int puntos = 0;
+
+    private boolean tieneRafaga = false;
+    private float cooldownRafaga = 0f;
+    private RafagaLuz disparoPendiente = null;
 
     private Direccion direccionActual = Direccion.ABAJO;
     private boolean moviendose = false;
@@ -43,7 +47,7 @@ public class Personaje extends Entidad {
         leerEntrada();
         mover(delta);
         consumirEnergia(delta);
-        acumularPuntos(delta);
+        actualizarCooldownRafaga(delta);
         actualizarInvulnerabilidad(delta);
         actualizarAnimaciones(delta);
         actualizarHitbox();
@@ -59,6 +63,14 @@ public class Personaje extends Entidad {
         if (moviendose) {
             direccionMovimiento.nor();
             actualizarDireccionVisual();
+        }
+
+        // Atajo de debug provisional para testar la ráfaga antes de Fase 3 (santuario).
+        if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+            tieneRafaga = true;
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            intentarDisparar();
         }
     }
 
@@ -86,12 +98,35 @@ public class Personaje extends Entidad {
         energia = Math.max(0f, energia - consumoPorSegundo * delta);
     }
 
-    private void acumularPuntos(float delta) {
-        acumuladorPuntos += delta;
-        while (acumuladorPuntos >= 1f) {
-            puntos += 1;
-            acumuladorPuntos -= 1f;
+    private void actualizarCooldownRafaga(float delta) {
+        if (cooldownRafaga > 0f) cooldownRafaga -= delta;
+    }
+
+    private void intentarDisparar() {
+        if (!tieneRafaga) return;
+        if (cooldownRafaga > 0f) return;
+        if (energia <= ConfiguracionJuego.RAFAGA_COSTE_ENERGIA) return;
+        Vector2 dir = direccionDisparoActual();
+        disparoPendiente = new RafagaLuz(posicion.x, posicion.y, dir);
+        energia -= ConfiguracionJuego.RAFAGA_COSTE_ENERGIA;
+        cooldownRafaga = ConfiguracionJuego.RAFAGA_COOLDOWN;
+    }
+
+    private Vector2 direccionDisparoActual() {
+        switch (direccionActual) {
+            case ARRIBA:    return new Vector2(0f, 1f);
+            case IZQUIERDA: return new Vector2(-1f, 0f);
+            case DERECHA:   return new Vector2(1f, 0f);
+            case ABAJO:
+            default:        return new Vector2(0f, -1f);
         }
+    }
+
+    /** Devuelve el disparo generado este frame (o null) y lo limpia. La PantallaJuego lo inserta en su lista. */
+    public RafagaLuz consumirDisparoPendiente() {
+        RafagaLuz d = disparoPendiente;
+        disparoPendiente = null;
+        return d;
     }
 
     private void actualizarInvulnerabilidad(float delta) {
@@ -169,4 +204,7 @@ public class Personaje extends Entidad {
         return energia / energiaMaxima;
     }
     public void sumarPuntos(int puntos) { this.puntos += puntos; }
+
+    public boolean tieneRafaga() { return tieneRafaga; }
+    public void desbloquearRafaga() { tieneRafaga = true; }
 }
