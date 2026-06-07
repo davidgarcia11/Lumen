@@ -267,7 +267,7 @@ public class PantallaJuego extends ScreenAdapter {
         boolean activado = objetivo.intentarActivar(personaje);
         if (activado) {
             GestorAudio.reproducirEfecto(GestorAudio.Efecto.DESPERTAR);
-            hud.mostrarMensaje("Recuerdas… cómo proyectabas tu luz hacia delante.", 3.5f);
+            hud.mostrarMensaje("Recuerdas... cómo proyectabas tu luz hacia delante.", 3.5f);
         }
     }
 
