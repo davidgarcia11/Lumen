@@ -12,56 +12,107 @@
 
 Su luz es su identidad, su arma y su vulnerabilidad. Ilumina el camino, debilita a las criaturas de sombra que custodian el templo y le permite resolver los rompecabezas que separan las salas, pero se consume con el tiempo y con cada daño recibido.
 
-A través de doce salas distribuidas en dos niveles, el jugador decide cuándo enfrentarse a la oscuridad y cuándo esquivarla, recolectando esencias para desbloquear nuevas habilidades en los santuarios olvidados del templo.
+A través de **6 salas distribuidas en 2 niveles**, el jugador decide cuándo enfrentarse a la oscuridad y cuándo esquivarla, recolectando esencias para desbloquear la **ráfaga de luz** en el santuario olvidado del templo.
 
-## Características
+## Cómo ejecutar
 
-- **Movimiento 8 direcciones** con vector normalizado.
-- **Sistema de luz** como recurso unificado: vida, iluminación y combustible.
-- **Combate opcional**: el jugador puede esquivar a los enemigos en lugar de enfrentarlos.
-- **3 personajes seleccionables** con estadísticas y mecánicas únicas (Luminis, Ignis, Aethen).
-- **Sistema de habilidades por santuarios**: ráfaga de luz, dash con invulnerabilidad y aura permanente.
-- **IA con máquinas de estados** para los 4 tipos de criaturas de sombra.
-- **Top 10 de Récords de Campeones** persistente.
-- **Guardar y cargar partida**.
-- **Menú de pausa in-game**.
+Requisitos: **Java 17+** y un sistema con OpenGL.
+
+```bash
+git clone https://github.com/davidgarcia11/Lumen.git
+cd Lumen
+./gradlew lwjgl3:run
+```
+
+Descarga directa del ejecutable: [Releases](https://github.com/davidgarcia11/Lumen/releases).
 
 ## Controles
 
 | Tecla | Acción |
 |---|---|
 | W / A / S / D | Movimiento en 8 direcciones |
-| Espacio | Ráfaga de luz (una vez desbloqueada) |
-| Shift izquierdo | Dash con invulnerabilidad (una vez desbloqueado) |
-| E | Interactuar (palancas, santuarios, inscripciones, puertas) |
-| Esc | Abrir/cerrar menú de pausa |
+| Espacio | Ráfaga de luz (una vez desbloqueada en el santuario) |
+| E | Activar santuario cuando estás cerca |
+| Esc | Abrir / cerrar menú de pausa |
+
+## Características
+
+- **Movimiento 8 direcciones** con vector normalizado.
+- **Sistema de luz** como recurso unificado: vida, iluminación y combustible.
+- **Combate opcional**: esquivar enemigos suele ser tan válido como combatirlos.
+- **Santuario** que desbloquea la ráfaga de luz a cambio de 2 esencias.
+- **3 tipos de criaturas de sombra** con IA propia (Acechante, Mirón, Devorador) implementadas con el patrón State.
+- **Top 10 de Récords de Campeones** persistente con nombre, tiempo y fecha.
+- **Guardar y cargar partida** con autosave por sala.
+- **Menú de pausa in-game** con sonido on/off, reintentar nivel, menú y salir.
+- **Configuración persistente**: volumen de música, volumen de efectos y dificultad.
+
+## Requisitos del enunciado cubiertos
+
+### Primera entrega — obligatorios (5/5)
+
+| Requisito | Cubierto en |
+|---|---|
+| Personaje principal + inicio/final/objetivo + ≥2 niveles diferenciados | `entidades/Personaje`, `niveles/{Nivel,Sala,Salas}`, `pantallas/{PantallaMenu,PantallaJuego,PantallaVictoria}` |
+| Información en pantalla actualizada (puntuación, energía, nivel) | `ui/HUD` |
+| Menús + instrucciones + rejugar sin salir + ≥2 opciones configurables | `pantallas/{PantallaMenu,PantallaConfiguracion,PantallaInstrucciones,PantallaRecords}`, 3 opciones (música, efectos, dificultad) |
+| ≥3 NPCs distintos interactuando con el jugador | `entidades/npc/{Acechante,Miron,Devorador}` |
+| Sonido + animaciones en todos los caracteres con movimiento | `audio/GestorAudio`, `utiles/{SpritesLumen,SpritesEnemigos,Animacion}` |
+
+### Segunda entrega — opcionales (5/5)
+
+| Opcional | Cubierto en |
+|---|---|
+| **A**. GitHub gestionado (commits, PRs, issues, releases, wiki) | Historial completo de ramas `feature/*`, PRs `#13`-`#24`, [release v1.0.0](https://github.com/davidgarcia11/Lumen/releases/tag/v1.0.0) |
+| **B**. Top 10 con nombre + persistencia | `datos/{Puntuacion,GestorRecords}`, `pantallas/{PantallaVictoria,PantallaRecords}` |
+| **C**. IA en NPCs | `ia/` con `MaquinaEstados` + 7 estados (patrón State del Gang of Four) |
+| **D**. Menú in-game (sonido, reintentar, menú, salir) | `ui/MenuPausa` |
+| **I**. Guardar y cargar partida | `datos/{EstadoPartida,GestorGuardado}` + autosave en `PantallaJuego` |
+
+## Arquitectura
+
+Patrones y decisiones de diseño:
+
+- **POO clásica** (clases con responsabilidad clara, herencia donde aporta, parametrización donde solo cambian valores).
+- **Patrón Screen de libGDX** para separar pantallas con su propio ciclo de vida.
+- **Patrón State** para las máquinas de estados de los NPCs.
+- **Hitboxes diferenciadas** entre núcleo (daña al jugador) y cuerpo (recibe daño de la ráfaga).
+- **Resolución lógica** de 480×270 píxeles escalada con `FitViewport` y filtro `Nearest Neighbor`.
+
+Documentación completa: [`docs/DISENO.md`](docs/DISENO.md).
 
 ## Tecnologías
 
-- **libGDX 1.14.1** — motor de videojuegos 2D multiplataforma.
 - **Java 17** — lenguaje de desarrollo.
-- **Gradle** — sistema de build (incluido vía wrapper).
-- **Tiled** — editor externo de mapas (`.tmx`).
-- **Pixel art** 16-bit como estilo visual.
+- **libGDX 1.14.1** — motor 2D multiplataforma.
+- **Gradle 8.x** — sistema de build (incluido vía wrapper).
+- **Pixel art** generado por código como estilo visual (sin assets gráficos externos).
 
-## Documentación
+## Estructura del proyecto
 
-El proyecto incluye documentación detallada:
-
-- [`docs/DISENO.md`](docs/DISENO.md) — Documento de diseño completo (concepto, mecánicas, niveles, arquitectura técnica).
-
-## Estado del proyecto
-
-Proyecto en desarrollo. Consulta la pestaña [Releases](https://github.com/davidgarcia11/Lumen/releases) para ver las versiones publicadas.
-
-- 🚧 Fase de diseño completada.
-- 🚧 Implementación en curso.
+```
+core/                     ← lógica del juego (modulo compartible entre plataformas)
+  src/main/java/com/davidgarcia/lumen/
+    Main.java
+    audio/                ← GestorAudio
+    config/               ← ConfiguracionJuego, GestorPreferencias
+    datos/                ← Puntuacion, GestorRecords, EstadoPartida, GestorGuardado
+    entidades/            ← Personaje + npc/, proyectiles/, recolectables/, elementos/
+    ia/                   ← MaquinaEstados + estados/
+    niveles/              ← Nivel, Sala, Salas, GestorNiveles, CondicionApertura
+    pantallas/            ← Menú, Juego, Configuración, Instrucciones, Records, Victoria
+    ui/                   ← HUD, MenuPausa, SkinFactory
+    utiles/               ← Sprites, Animacion, GestorAssets, GeneradorPixmap
+lwjgl3/                   ← launcher de escritorio
+assets/                   ← música y efectos de sonido
+docs/DISENO.md            ← documento de diseño
+```
 
 ## Estructura de ramas
 
-- `main` — versiones estables (releases v1.0 y v2.0).
-- `develop` — rama de integración del desarrollo.
-- `feature/*`, `fix/*`, `docs/*` — ramas de trabajo, integradas vía Pull Request.
+- `main` — versión publicada (v1.0.0).
+- `develop` — rama de integración.
+- `feature/*`, `fix/*` — ramas de trabajo, integradas vía Pull Request.
 
 ## Autor
 
@@ -69,7 +120,7 @@ David García — Alumno de Programación Multimedia y Dispositivos Móviles, SE
 
 ## Licencia y créditos
 
-Proyecto académico. Los assets gráficos y de audio utilizados son recursos gratuitos de terceros con licencias compatibles.
+Proyecto académico. Los assets gráficos se generan por código. Los recursos de audio utilizados son obras de terceros con licencias compatibles.
 
 ### Audio
 
