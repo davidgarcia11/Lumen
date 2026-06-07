@@ -50,6 +50,20 @@ public class GestorNiveles {
         return cargarSalaActual();
     }
 
+    /**
+     * Carga directamente una sala arbitraria (usado al reanudar una partida
+     * guardada). Los índices se acotan al rango válido por seguridad.
+     */
+    public List<Entidad> cargarSalaPorIndices(int nivel, int sala) {
+        this.indiceNivel = Math.max(0, Math.min(nivel, niveles.size() - 1));
+        int totalSalas = niveles.get(indiceNivel).getCantidadSalas();
+        this.indiceSala = Math.max(0, Math.min(sala, totalSalas - 1));
+        return cargarSalaActual();
+    }
+
+    public int getIndiceNivel() { return indiceNivel; }
+    public int getIndiceSala() { return indiceSala; }
+
     /** Avanza a la siguiente sala. Si era la última del nivel, salta al primer sala del siguiente nivel. */
     public List<Entidad> avanzarSala() {
         Nivel nivelActual = niveles.get(indiceNivel);

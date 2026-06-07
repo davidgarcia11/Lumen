@@ -16,6 +16,8 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.davidgarcia.lumen.Main;
 import com.davidgarcia.lumen.audio.GestorAudio;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
+import com.davidgarcia.lumen.datos.EstadoPartida;
+import com.davidgarcia.lumen.datos.GestorGuardado;
 import com.davidgarcia.lumen.ui.SkinFactory;
 
 /** Pantalla del menú principal. */
@@ -41,22 +43,40 @@ public class PantallaMenu extends ScreenAdapter {
         tabla.setFillParent(true);
         stage.addActor(tabla);
 
+        boolean hayPartidaGuardada = GestorGuardado.existePartidaGuardada();
+
         Label titulo = new Label("LUMEN", skin, "titulo");
         Label subtitulo = new Label("Capítulo I - La Ascensión", skin);
+        TextButton botonContinuar = hayPartidaGuardada ? new TextButton("Continuar", skin) : null;
         TextButton botonNuevaPartida = new TextButton("Nueva partida", skin);
         TextButton botonRecords = new TextButton("Récords", skin);
         TextButton botonInstrucciones = new TextButton("Instrucciones", skin);
         TextButton botonConfiguracion = new TextButton("Configuración", skin);
         TextButton botonSalir = new TextButton("Salir", skin);
 
+        if (botonContinuar != null) anadirSonidoUI(botonContinuar);
         anadirSonidoUI(botonNuevaPartida);
         anadirSonidoUI(botonRecords);
         anadirSonidoUI(botonInstrucciones);
         anadirSonidoUI(botonConfiguracion);
         anadirSonidoUI(botonSalir);
 
+        if (botonContinuar != null) {
+            botonContinuar.addListener(new ChangeListener() {
+                @Override public void changed(ChangeEvent event, Actor actor) {
+                    EstadoPartida estado = GestorGuardado.cargar();
+                    if (estado != null) {
+                        juego.setScreen(new PantallaJuego(juego, estado));
+                    } else {
+                        juego.setScreen(new PantallaJuego(juego));
+                    }
+                }
+            });
+        }
+
         botonNuevaPartida.addListener(new ChangeListener() {
             @Override public void changed(ChangeEvent event, Actor actor) {
+                GestorGuardado.borrar();
                 juego.setScreen(new PantallaJuego(juego));
             }
         });
@@ -83,6 +103,7 @@ public class PantallaMenu extends ScreenAdapter {
 
         tabla.add(titulo).padBottom(20).row();
         tabla.add(subtitulo).padBottom(60).row();
+        if (botonContinuar != null) tabla.add(botonContinuar).width(300).padBottom(15).row();
         tabla.add(botonNuevaPartida).width(300).padBottom(15).row();
         tabla.add(botonRecords).width(300).padBottom(15).row();
         tabla.add(botonInstrucciones).width(300).padBottom(15).row();
