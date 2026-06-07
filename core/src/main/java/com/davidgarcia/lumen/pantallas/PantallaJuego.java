@@ -15,6 +15,8 @@ import com.davidgarcia.lumen.audio.GestorAudio;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
 import com.davidgarcia.lumen.entidades.Entidad;
 import com.davidgarcia.lumen.entidades.Personaje;
+import com.davidgarcia.lumen.entidades.elementos.Brasero;
+import com.davidgarcia.lumen.entidades.elementos.Santuario;
 import com.davidgarcia.lumen.entidades.npc.Acechante;
 import com.davidgarcia.lumen.entidades.npc.Devorador;
 import com.davidgarcia.lumen.entidades.npc.Miron;
@@ -126,6 +128,8 @@ public class PantallaJuego extends ScreenAdapter {
         eliminarProyectilesInactivos();
         eliminarNpcsMuertosYSumarPuntos();
         recogerRecolectablesEnContacto();
+        encenderBraserosEnContacto();
+        gestionarInteraccionSantuario();
 
         detectarColisionesPersonajeNPC();
 
@@ -203,6 +207,55 @@ public class PantallaJuego extends ScreenAdapter {
         }
     }
 
+    private void encenderBraserosEnContacto() {
+        for (Entidad e : entidades) {
+            if (!(e instanceof Brasero)) continue;
+            Brasero b = (Brasero) e;
+            if (b.estaEncendido()) continue;
+            if (personaje.getHitbox().overlaps(b.getHitbox())) {
+                b.encender();
+            }
+        }
+    }
+
+    private void gestionarInteraccionSantuario() {
+        if (!Gdx.input.isKeyJustPressed(Input.Keys.E)) return;
+        Santuario objetivo = santuarioAlAlcance();
+        if (objetivo == null) return;
+        boolean activado = objetivo.intentarActivar(personaje);
+        if (activado) {
+            GestorAudio.reproducirEfecto(GestorAudio.Efecto.DESPERTAR);
+        }
+    }
+
+    private void dibujarIndicadorInteraccion(ShapeRenderer shapes) {
+        Santuario s = santuarioAlAlcance();
+        if (s == null || s.estaActivado()) return;
+        // Pequeño punto pulsante encima del santuario para indicar interacción.
+        float yBase = s.getPosicion().y + ConfiguracionJuego.SANTUARIO_TAMANO * 0.7f;
+        shapes.setColor(1f, 1f, 1f, 0.9f);
+        shapes.circle(s.getPosicion().x, yBase, 2.5f);
+    }
+
+    private Santuario santuarioAlAlcance() {
+        float rangoCuadrado = ConfiguracionJuego.RANGO_INTERACCION * ConfiguracionJuego.RANGO_INTERACCION;
+        Santuario mejor = null;
+        float mejorDistCuadrada = Float.MAX_VALUE;
+        for (Entidad e : entidades) {
+            if (!(e instanceof Santuario)) continue;
+            Santuario s = (Santuario) e;
+            float dx = s.getPosicion().x - personaje.getPosicion().x;
+            float dy = s.getPosicion().y - personaje.getPosicion().y;
+            float distCuadrada = dx * dx + dy * dy;
+            if (distCuadrada > rangoCuadrado) continue;
+            if (distCuadrada < mejorDistCuadrada) {
+                mejor = s;
+                mejorDistCuadrada = distCuadrada;
+            }
+        }
+        return mejor;
+    }
+
     private void recolocarPersonaje() {
         personaje.getPosicion().set(
             ConfiguracionJuego.ANCHO_MUNDO / 2f,
@@ -260,10 +313,13 @@ public class PantallaJuego extends ScreenAdapter {
             proyectil.dibujarForma(shapeRenderer);
         }
         for (Entidad entidad : entidades) {
-            if (entidad instanceof Esencia)        ((Esencia) entidad).dibujarForma(shapeRenderer);
+            if (entidad instanceof Brasero)        ((Brasero) entidad).dibujarForma(shapeRenderer);
+            else if (entidad instanceof Santuario) ((Santuario) entidad).dibujarForma(shapeRenderer);
+            else if (entidad instanceof Esencia)   ((Esencia) entidad).dibujarForma(shapeRenderer);
             else if (entidad instanceof CristalEnergia) ((CristalEnergia) entidad).dibujarForma(shapeRenderer);
             else if (entidad instanceof Llave)     ((Llave) entidad).dibujarForma(shapeRenderer);
         }
+        dibujarIndicadorInteraccion(shapeRenderer);
         shapeRenderer.end();
 
         batch.begin();

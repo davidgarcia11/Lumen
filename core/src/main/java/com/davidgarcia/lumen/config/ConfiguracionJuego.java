@@ -64,6 +64,16 @@ public final class ConfiguracionJuego {
     /** Tamaño visual y de hitbox de los recolectables, en unidades del mundo. */
     public static final float RECOLECTABLE_TAMANO = 10f;
 
+    // ─── Elementos interactuables ───────────────────────────────────────────
+    /** Tamaño de la hitbox física de un brasero. */
+    public static final float BRASERO_TAMANO = 14f;
+    /** Tamaño de la hitbox del santuario. */
+    public static final float SANTUARIO_TAMANO = 22f;
+    /** Distancia máxima a la que Lumen puede activar un santuario con tecla E. */
+    public static final float RANGO_INTERACCION = 22f;
+    /** Coste en esencias para desbloquear la ráfaga en el santuario. */
+    public static final int SANTUARIO_RAFAGA_COSTE = 2;
+
     private ConfiguracionJuego() {
         // Clase de constantes; no se instancia.
     }

@@ -68,10 +68,6 @@ public class Personaje extends Entidad {
             actualizarDireccionVisual();
         }
 
-        // Atajo de debug provisional para testar la ráfaga antes de Fase 3 (santuario).
-        if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
-            tieneRafaga = true;
-        }
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             intentarDisparar();
         }

@@ -3,6 +3,8 @@ package com.davidgarcia.lumen.niveles;
 import com.davidgarcia.lumen.config.ConfiguracionJuego;
 import com.davidgarcia.lumen.entidades.Entidad;
 import com.davidgarcia.lumen.entidades.Personaje;
+import com.davidgarcia.lumen.entidades.elementos.Brasero;
+import com.davidgarcia.lumen.entidades.elementos.Santuario;
 import com.davidgarcia.lumen.entidades.npc.Acechante;
 import com.davidgarcia.lumen.entidades.npc.Devorador;
 import com.davidgarcia.lumen.entidades.npc.Miron;
@@ -36,20 +38,22 @@ public final class Salas {
         });
     }
 
-    /** N1-S2: aparece el primer Mirón con cono de visión. */
+    /** N1-S2: Mirón + brasero a tocar + segunda esencia para llegar a 2 antes del santuario. */
     public static Sala n1s2() {
         return new Sala("N1-S2", personaje -> {
-            List<Entidad> enemigos = new ArrayList<>();
-            enemigos.add(new Acechante(
+            List<Entidad> entidades = new ArrayList<>();
+            entidades.add(new Acechante(
                 ANCHO * 0.20f, ALTO * 0.30f,
                 ANCHO * 0.80f, ALTO * 0.30f
             ));
-            enemigos.add(new Miron(
+            entidades.add(new Miron(
                 ANCHO * 0.50f, ALTO * 0.75f,
                 270f,
                 personaje
             ));
-            return enemigos;
+            entidades.add(new Brasero(ANCHO * 0.15f, ALTO * 0.65f));
+            entidades.add(new Esencia(ANCHO * 0.85f, ALTO * 0.65f));
+            return entidades;
         });
     }
 
@@ -71,6 +75,11 @@ public final class Salas {
                 personaje
             ));
             entidades.add(new CristalEnergia(ANCHO * 0.25f, ALTO * 0.75f));
+            entidades.add(new Santuario(
+                ANCHO * 0.50f, ALTO * 0.50f,
+                Santuario.Habilidad.RAFAGA,
+                ConfiguracionJuego.SANTUARIO_RAFAGA_COSTE
+            ));
             return entidades;
         });
     }
