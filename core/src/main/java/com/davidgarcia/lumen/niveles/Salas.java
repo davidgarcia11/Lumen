@@ -91,7 +91,7 @@ public final class Salas {
                 180f,
                 personaje
             ));
-            entidades.add(new Llave(ANCHO * 0.5f, ALTO * 0.15f));
+            entidades.add(new Llave(ANCHO * 0.5f, ALTO * 0.85f));
             return entidades;
         });
     }
